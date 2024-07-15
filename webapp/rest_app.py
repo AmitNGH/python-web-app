@@ -8,21 +8,20 @@ backend_route = '/users/<user_id>'
 
 @app.route(endpoint=backend_route, methods=['GET'])
 def get_user(user_id):
-    try:
-        user_id = int(user_id)
+    response = {}
 
-    except ValueError:
-        # TODO: handle convert to int failed
-        return_code = 500
+    with db_connection().cursor() as cursor:
+        cursor.execute(f"SELECT user_name FROM `users` WHERE `id`={user_id}")
+        if cursor.rowcount == 0:
+            response["status"] = "error"
+            response["reason"] = "no such id"
+            return_code = 500
+        else :
+            response["status"] = "ok"
+            response["user_name"] = cursor.fetchone()
+            return_code = 200
 
-    else:
-        with db_connection().cursor() as cursor:
-            cursor.execute(f"SELECT user_name FROM `users` WHERE `id`={user_id}")
-
-        return_code = 200
-        result = cursor.fetchone()
-
-    return jsonify(result), return_code
+    return jsonify(response), return_code
 
 
 @app.route(endpoint=backend_route, methods=['POST'])
