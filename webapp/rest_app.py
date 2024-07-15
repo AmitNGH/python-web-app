@@ -1,6 +1,9 @@
 from flask import Flask, jsonify, request
 from datetime import datetime
+from pymysql import IntegrityError
+
 from db_handler import db_connection
+from Utils import PYMYSQL_DUPLICATE_ERROR
 
 app = Flask(__name__)
 
@@ -21,7 +24,7 @@ def get_user(user_id):
             return_code = 500
         else:
             response["status"] = "ok"
-            response["user_name"] = cursor.fetchone()
+            response["user_name"] = cursor.fetchone()[0]
             return_code = 200
 
     return jsonify(response), return_code
@@ -29,15 +32,35 @@ def get_user(user_id):
 
 @app.route(backend_route, methods=['POST'])
 def create_user(user_id):
-    request_payload = request.json()
+    # Get payload from request
+    request_payload = request.get_json()
+
+    # Prepare data for query
     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     user_name = request_payload['user_name']
 
-    # TODO: check if user with same id exists, Error handling
+    response = {}
+    id_exists = False
 
     with db_connection().cursor() as cursor:
-        cursor.execute(f"INSERT INTO users (user_id, user_name, creation_date) "
-                       f"VALUES ({user_id}, {user_name}, {now}")
+        try:
+            cursor.execute(f"INSERT INTO users (user_id, user_name, creation_date) "
+                           f"VALUES ({user_id}, '{user_name}', '{now}')")
+        except IntegrityError as e:
+            if e.args[0] == PYMYSQL_DUPLICATE_ERROR:
+                id_exists = True
+
+    if id_exists:
+        response["status"] = "error"
+        response["reason"] = "id already exists"
+        return_code = 500
+    else:
+        db_connection().commit()
+        response["status"] = "ok"
+        response["user_name"] = user_name
+        return_code = 200
+
+    return jsonify(response), return_code
 
 
 @app.route(backend_route, methods=['PUT'])
