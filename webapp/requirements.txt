@@ -1,4 +1,3 @@
-pymysql
 PyMySQL[rsa]
 requests
 flask
