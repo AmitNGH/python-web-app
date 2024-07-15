@@ -57,7 +57,7 @@ def create_user(user_id):
     else:
         db_connection().commit()
         response["status"] = "ok"
-        response["user_name"] = user_name
+        response["user_added"] = user_name
         return_code = 200
 
     return jsonify(response), return_code
