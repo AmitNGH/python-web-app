@@ -3,15 +3,15 @@ from db_handler import db_connection
 
 app = Flask(__name__)
 
-backend_route = '/users/<user_id>'
+backend_route = '/users/<int:user_id>'
 
 
-@app.route(endpoint=backend_route, methods=['GET'])
+@app.route(backend_route, methods=['GET'])
 def get_user(user_id):
     response = {}
 
     with db_connection().cursor() as cursor:
-        cursor.execute(f"SELECT user_name FROM `users` WHERE `id`={user_id}")
+        cursor.execute(f"SELECT user_name FROM `users` WHERE `user_id`={user_id}")
         if cursor.rowcount == 0:
             response["status"] = "error"
             response["reason"] = "no such id"
@@ -24,17 +24,17 @@ def get_user(user_id):
     return jsonify(response), return_code
 
 
-@app.route(endpoint=backend_route, methods=['POST'])
+@app.route(backend_route, methods=['POST'])
 def create_user(user_id):
     print("Hello World")
 
 
-@app.route(endpoint=backend_route, methods=['PUT'])
+@app.route(backend_route, methods=['PUT'])
 def update_user(user_id):
     print("Hello World")
 
 
-@app.route(endpoint=backend_route, methods=['DELETE'])
+@app.route(backend_route, methods=['DELETE'])
 def remove_user(user_id):
     print("Hello World")
 
