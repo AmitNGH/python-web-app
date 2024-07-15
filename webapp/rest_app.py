@@ -14,10 +14,13 @@ backend_route = '/users/<int:user_id>'
 def get_user(user_id):
     response = {}
 
+    # Executes query to get the requested user from the database
     with db_connection().cursor() as cursor:
         cursor.execute(f"SELECT user_name "
                        f"FROM `users` "
                        f"WHERE `user_id`={user_id}")
+
+        # In case the user does not exist
         if cursor.rowcount == 0:
             response["status"] = "error"
             response["reason"] = "no such id"
@@ -65,15 +68,32 @@ def create_user(user_id):
 
 @app.route(backend_route, methods=['PUT'])
 def update_user(user_id):
-    request_payload = request.json()
+    # Get payload from request
+    request_payload = request.get_json()
+
+    # Prepare data for query
     user_name = request_payload['user_name']
 
-    # TODO: Check if user exists before updating, Error handling
+    response = {}
 
     with db_connection().cursor() as cursor:
         cursor.execute(f"UPDATE users "
-                       f"SET user_name = {user_name} "
+                       f"SET user_name = '{user_name}' "
                        f"WHERE user_id = {user_id}")
+
+        # TODO: Add id exists check, and add it to previous methods
+        # In case the user does not exist
+        if cursor.rowcount == 0:
+            response["status"] = "error"
+            response["reason"] = "no such id"
+            return_code = 500
+        else:
+            db_connection().commit()
+            response["status"] = "ok"
+            response["user_updated"] = cursor.fetchone()[0]
+            return_code = 200
+
+    return jsonify(response), return_code
 
 
 @app.route(backend_route, methods=['DELETE'])
