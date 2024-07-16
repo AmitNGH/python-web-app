@@ -1,9 +1,8 @@
 from flask import Flask, jsonify, request
 from datetime import datetime
-from pymysql import IntegrityError
 
 from db_handler import db_connection
-from Utils import PYMYSQL_DUPLICATE_ERROR
+from Utils import ERROR_RETURN_CODE, OK_RETURN_CODE
 
 app = Flask(__name__)
 
@@ -12,23 +11,18 @@ backend_route = '/users/<int:user_id>'
 
 @app.route(backend_route, methods=['GET'])
 def get_user(user_id):
-    response = {}
-
     # Executes query to get the requested user from the database
     with db_connection().cursor() as cursor:
-        cursor.execute(f"SELECT user_name "
-                       f"FROM `users` "
-                       f"WHERE `user_id`={user_id}")
+        user_exists, user_object = check_user_exists_by_id(user_id, cursor)
 
-        # In case the user does not exist
-        if cursor.rowcount == 0:
-            response["status"] = "error"
-            response["reason"] = "no such id"
-            return_code = 500
-        else:
-            response["status"] = "ok"
-            response["user_name"] = cursor.fetchone()[0]
-            return_code = 200
+    # Checks if the user exists, building the response object accordingly
+    if user_exists:
+        response, return_code = ok_response_template()
+        response["user_name"] = cursor.fetchone()[0]
+
+    else:
+        response, return_code = error_response_template()
+        response["reason"] = "no such id"
 
     return jsonify(response), return_code
 
@@ -43,25 +37,21 @@ def create_user(user_id):
     user_name = request_payload['user_name']
 
     response = {}
-    id_exists = False
 
     with db_connection().cursor() as cursor:
-        try:
+        id_exists, user_data = check_user_exists_by_id(user_id, cursor)
+
+        if not id_exists:
             cursor.execute(f"INSERT INTO users (user_id, user_name, creation_date) "
                            f"VALUES ({user_id}, '{user_name}', '{now}')")
-        except IntegrityError as e:
-            if e.args[0] == PYMYSQL_DUPLICATE_ERROR:
-                id_exists = True
+            db_connection().commit()
 
     if id_exists:
-        response["status"] = "error"
+        response, return_code = error_response_template()
         response["reason"] = "id already exists"
-        return_code = 500
     else:
-        db_connection().commit()
-        response["status"] = "ok"
+        response, return_code = ok_response_template()
         response["user_added"] = user_name
-        return_code = 200
 
     return jsonify(response), return_code
 
@@ -103,6 +93,25 @@ def remove_user(user_id):
                        f"WHERE user_id = {user_id}")
 
         # TODO: Check if user exists before deleting, Error handling
+
+
+def check_user_exists_by_id(user_id, cursor) -> (bool, dict):
+    cursor.execute(f"SELECT * "
+                   f"FROM users "
+                   f"WHERE user_id={user_id}")
+
+    if cursor.rowcount:
+        return True, cursor.fetchone()
+
+    return False, {}
+
+
+def error_response_template() -> (dict, int):
+    return {'status': 'error'}, ERROR_RETURN_CODE
+
+
+def ok_response_template() -> (dict, int):
+    return {'status': 'ok'}, OK_RETURN_CODE
 
 
 def run_rest_app():
