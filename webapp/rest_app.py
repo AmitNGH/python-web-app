@@ -95,7 +95,7 @@ def remove_user(user_id):
         # TODO: Check if user exists before deleting, Error handling
 
 
-def check_user_exists_by_id(user_id, cursor) -> (bool, dict):
+def check_user_exists_by_id(user_id, cursor) -> tuple[bool, dict]:
     cursor.execute(f"SELECT * "
                    f"FROM users "
                    f"WHERE user_id={user_id}")
@@ -106,11 +106,11 @@ def check_user_exists_by_id(user_id, cursor) -> (bool, dict):
     return False, {}
 
 
-def error_response_template() -> (dict, int):
+def error_response_template() -> tuple[dict, int]:
     return {'status': 'error'}, ERROR_RETURN_CODE
 
 
-def ok_response_template() -> (dict, int):
+def ok_response_template() -> tuple[dict, int]:
     return {'status': 'ok'}, OK_RETURN_CODE
 
 

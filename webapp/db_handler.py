@@ -11,7 +11,8 @@ connection = pymysql.connect(host=config['DB']['host'],
                              port=int(config['DB']['port']),
                              database=config['DB']['database'],
                              user=config['DB']['user'],
-                             password=config['DB']['password'])
+                             password=config['DB']['password'],
+                             autocommit=True)
 
 # Returns the db connection instance
 def db_connection():
