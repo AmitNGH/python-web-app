@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 from datetime import datetime
 
 from db_handler import db_connection
-from Utils import ERROR_RETURN_CODE, OK_RETURN_CODE
+from Utils import ERROR_RETURN_CODE, OK_RETURN_CODE, USER_NAME_INDEX_IN_DB
 
 app = Flask(__name__)
 
@@ -18,7 +18,7 @@ def get_user(user_id):
     # Checks if the user exists, building the response object accordingly
     if user_exists:
         response, return_code = ok_response_template()
-        response["user_name"] = cursor.fetchone()[0]
+        response["user_name"] = user_object[USER_NAME_INDEX_IN_DB - 1]
 
     else:
         response, return_code = error_response_template()
@@ -96,7 +96,7 @@ def remove_user(user_id):
 
 
 def check_user_exists_by_id(user_id, cursor) -> tuple[bool, dict]:
-    cursor.execute(f"SELECT * "
+    cursor.execute(f"SELECT user_id, user_name, creation_date "
                    f"FROM users "
                    f"WHERE user_id={user_id}")
 
