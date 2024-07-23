@@ -1,14 +1,21 @@
 from flask import Flask, jsonify, request
 from datetime import datetime
 
+from werkzeug.exceptions import UnsupportedMediaType
+
 from db_handler import db_connection
-from Utils import ERROR_RETURN_CODE, OK_RETURN_CODE, USER_NAME_INDEX_IN_DB
+from Utils import (ok_response_template,
+                   unprocessable_entity_response_template,
+                   unsupported_media_type_response_template,
+                   internal_server_error_response_template,
+                   USER_NAME_INDEX_IN_DB)
 
 app = Flask(__name__)
 
 backend_route = '/users/<int:user_id>'
 
 
+# Returns username stored in the DB for a given id
 @app.route(backend_route, methods=['GET'])
 def get_user(user_id):
     # Executes query to get the requested user from the database
@@ -21,7 +28,7 @@ def get_user(user_id):
         response["user_name"] = user_object[USER_NAME_INDEX_IN_DB - 1]
 
     else:
-        response, return_code = error_response_template()
+        response, return_code = internal_server_error_response_template()
         response["reason"] = "no such id"
 
     return jsonify(response), return_code
@@ -29,25 +36,38 @@ def get_user(user_id):
 
 @app.route(backend_route, methods=['POST'])
 def create_user(user_id):
-    # Get payload from request
-    request_payload = request.get_json()
 
-    # Prepare data for query
-    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    user_name = request_payload['user_name']
+    # Get JSON payload from request
+    try:
+        request_payload = request.get_json()
+    except UnsupportedMediaType:
+        response, return_code = unsupported_media_type_response_template()
+        response["reason"] = "payload should be json"
 
-    response = {}
+        return jsonify(response), return_code
 
+    # Checks if user_name key exists
+    user_name = request_payload.get("user_name")
+
+    if not user_name:
+        response, return_code = unprocessable_entity_response_template()
+        response["reason"] = "json does not contain user_name"
+
+        return jsonify(response), return_code
+
+    # Check id does not exist and execute insert to db
     with db_connection().cursor() as cursor:
         id_exists, user_data = check_user_exists_by_id(user_id, cursor)
 
         if not id_exists:
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             cursor.execute(f"INSERT INTO users (user_id, user_name, creation_date) "
                            f"VALUES ({user_id}, '{user_name}', '{now}')")
+
             db_connection().commit()
 
     if id_exists:
-        response, return_code = error_response_template()
+        response, return_code = internal_server_error_response_template()
         response["reason"] = "id already exists"
     else:
         response, return_code = ok_response_template()
@@ -104,14 +124,6 @@ def check_user_exists_by_id(user_id, cursor) -> tuple[bool, dict]:
         return True, cursor.fetchone()
 
     return False, {}
-
-
-def error_response_template() -> tuple[dict, int]:
-    return {'status': 'error'}, ERROR_RETURN_CODE
-
-
-def ok_response_template() -> tuple[dict, int]:
-    return {'status': 'ok'}, OK_RETURN_CODE
 
 
 def run_rest_app():
