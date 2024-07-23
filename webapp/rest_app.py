@@ -34,6 +34,7 @@ def get_user(user_id):
     return jsonify(response), return_code
 
 
+# Saves new user to DB for a given id and json payload containing key user_name
 @app.route(backend_route, methods=['POST'])
 def create_user(user_id):
 
