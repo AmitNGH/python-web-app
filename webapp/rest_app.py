@@ -19,7 +19,7 @@ backend_route = '/users/<int:user_id>'
 def get_user(user_id):
     # Executes query to get the requested user from the database
     with db_connection().cursor() as cursor:
-        user_exists, user_object = check_user_exists_by_id(user_id, cursor)
+        user_exists, user_object = check_user_exists_by_id(user_id, cursor, True)
 
     # Checks if the user exists, building the response object accordingly
     if user_exists:
@@ -130,15 +130,19 @@ def remove_user(user_id):
 
 
 # Runs a SELECT query on DB to check if the user_id exists
-# Returns tuple containing if the user_id exists and the user object in-case it does
-def check_user_exists_by_id(user_id, cursor) -> tuple[bool, dict]:
+# Returns tuple containing if the user_id exists and the user object in-case requested, empty object by default
+def check_user_exists_by_id(user_id, cursor, return_user_object=False) -> tuple[bool, dict]:
     db_connection().commit()
-    cursor.execute(f"SELECT user_id, user_name, creation_date "
-                   f"FROM users "
-                   f"WHERE user_id={user_id}")
-
+    if return_user_object:
+        cursor.execute(f"SELECT user_id, user_name, creation_date "
+                       f"FROM users "
+                       f"WHERE user_id={user_id}")
+    else:
+        cursor.execute(f"SELECT user_id "
+                       f"FROM users "
+                       f"WHERE user_id={user_id}")
     if cursor.rowcount:
-        return True, cursor.fetchone()
+        return True, {} if not return_user_object else cursor.fetchone()
 
     return False, {}
 
