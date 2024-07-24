@@ -1,3 +1,5 @@
+from werkzeug.exceptions import UnsupportedMediaType
+
 OK_RETURN_CODE = 200
 UNPROCESSABLE_ENTITY_CODE = 422
 UNSUPPORTED_MEDIA_TYPE_CODE = 415
@@ -22,3 +24,14 @@ def unsupported_media_type_response_template() -> tuple[dict, int]:
 
 def internal_server_error_response_template() -> tuple[dict, int]:
     return {'status': 'error'}, INTERNAL_SERVER_ERROR_CODE
+
+
+# Attempts to extract json object from given request -
+# Returns tuple containing if the operation was successful and the extracted json object
+def extract_json_from_request(json_request) -> tuple[bool, dict]:
+    try:
+        request_json = json_request.get_json()
+    except UnsupportedMediaType:
+        return False, {}
+
+    return True, request_json
