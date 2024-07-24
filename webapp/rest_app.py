@@ -38,16 +38,16 @@ def get_user(user_id):
 @app.route(backend_route, methods=['POST'])
 def create_user(user_id):
 
-    # Get JSON payload from request
-    try:
-        request_payload = request.get_json()
-    except UnsupportedMediaType:
+    is_right_format, request_payload = extract_json_from_request(request)
+
+    # Returns error in-case request is not in json format
+    if not is_right_format:
         response, return_code = unsupported_media_type_response_template()
         response["reason"] = "payload should be json"
 
         return jsonify(response), return_code
 
-    # Checks if user_name key exists
+    # Returns error is user_name key does not exist
     user_name = request_payload.get("user_name")
 
     if not user_name:
@@ -116,6 +116,7 @@ def remove_user(user_id):
         # TODO: Check if user exists before deleting, Error handling
 
 
+#
 def check_user_exists_by_id(user_id, cursor) -> tuple[bool, dict]:
     cursor.execute(f"SELECT user_id, user_name, creation_date "
                    f"FROM users "
@@ -125,6 +126,17 @@ def check_user_exists_by_id(user_id, cursor) -> tuple[bool, dict]:
         return True, cursor.fetchone()
 
     return False, {}
+
+
+# Attempts to extract json object from given request -
+# Returns tuple containing if the operation was successful and the extracted json object
+def extract_json_from_request(json_request) -> tuple[bool, dict]:
+    try:
+        request_json = json_request.get_json()
+    except UnsupportedMediaType:
+        return False, {}
+
+    return True, request_json
 
 
 def run_rest_app():
