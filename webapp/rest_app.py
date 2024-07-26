@@ -19,7 +19,7 @@ backend_route = '/users/<int:user_id>'
 def get_user(user_id):
     # Executes query to get the requested user from the database
     with db_connection().cursor() as cursor:
-        user_exists, user_object = check_user_exists_by_id(user_id, cursor, True)
+        (user_exists, user_object) = check_user_exists_by_id(user_id, cursor, True)
 
     # Checks if the user exists, building the response object accordingly
     if user_exists:
@@ -65,15 +65,14 @@ def create_user(user_id):
             now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             cursor.execute(f"INSERT INTO users (user_id, user_name, creation_date) "
                            f"VALUES ({user_id}, '{user_name}', '{now}')")
-
             db_connection().commit()
 
-    if user_exists:
-        response, return_code = internal_server_error_response_template()
-        response["reason"] = "id already exists"
-    else:
-        response, return_code = ok_response_template()
-        response["user_added"] = user_name
+            response, return_code = ok_response_template()
+            response["user_added"] = user_name
+
+        else:
+            response, return_code = internal_server_error_response_template()
+            response["reason"] = "id already exists"
 
     return jsonify(response), return_code
 
@@ -109,10 +108,10 @@ def update_user(user_id):
                            f"WHERE user_id = {user_id}")
             db_connection().commit()
 
-        # In case the user does not exist
-        if user_exists:
             response, return_code = ok_response_template()
             response["user_updated"] = user_name
+
+        # In case the user does not exist
         else:
             response, return_code = internal_server_error_response_template()
             response["reason"] = "no such id"
@@ -123,10 +122,20 @@ def update_user(user_id):
 @app.route(backend_route, methods=['DELETE'])
 def remove_user(user_id):
     with db_connection().cursor() as cursor:
-        cursor.execute(f"DELETE FROM users"
-                       f"WHERE user_id = {user_id}")
+        user_exists = check_user_exists_by_id(user_id, cursor)
 
-        # TODO: Check if user exists before deleting, Error handling
+        if user_exists:
+            cursor.execute(f"DELETE FROM users "
+                           f"WHERE user_id = {user_id}")
+            db_connection().commit()
+
+            response, return_code = ok_response_template()
+            response["user_deleted"] = user_id
+        else:
+            response, return_code = internal_server_error_response_template()
+            response["reason"] = "no such id"
+
+    return jsonify(response), return_code
 
 
 # Runs a SELECT query on DB to check if the user_id exists
@@ -144,7 +153,7 @@ def check_user_exists_by_id(user_id, cursor, return_user_object=False) -> bool |
     if cursor.rowcount:
         return True if not return_user_object else (True, cursor.fetchone())
 
-    return False
+    return False if not return_user_object else (False, {})
 
 
 def run_rest_app():
