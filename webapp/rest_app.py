@@ -1,7 +1,8 @@
 from flask import Flask, jsonify, request
 from datetime import datetime
 
-from db_handler import db_connection
+from db_handler import (db_connection,
+                        check_user_exists_by_id)
 from Utils import (extract_json_from_request,
                    ok_response_template,
                    unprocessable_entity_response_template,
@@ -123,24 +124,6 @@ def remove_user(user_id):
             response, return_code = no_such_id_response()
 
     return jsonify(response), return_code
-
-
-# Runs a SELECT query on DB to check if the user_id exists
-# Returns tuple containing if the user_id exists and the user object in-case requested
-def check_user_exists_by_id(user_id, cursor, return_user_object=False) -> bool | tuple[bool, dict]:
-    db_connection().commit()
-    if return_user_object:
-        cursor.execute(f"SELECT user_id, user_name, creation_date "
-                       f"FROM users "
-                       f"WHERE user_id={user_id}")
-    else:
-        cursor.execute(f"SELECT user_id "
-                       f"FROM users "
-                       f"WHERE user_id={user_id}")
-    if cursor.rowcount:
-        return True if not return_user_object else (True, cursor.fetchone())
-
-    return False if not return_user_object else (False, {})
 
 
 def no_such_id_response():
