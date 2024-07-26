@@ -59,16 +59,16 @@ def create_user(user_id):
 
     # Check id does not exist and execute insert to db
     with db_connection().cursor() as cursor:
-        id_exists, user_data = check_user_exists_by_id(user_id, cursor)
+        user_exists = check_user_exists_by_id(user_id, cursor)
 
-        if not id_exists:
+        if not user_exists:
             now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             cursor.execute(f"INSERT INTO users (user_id, user_name, creation_date) "
                            f"VALUES ({user_id}, '{user_name}', '{now}')")
 
             db_connection().commit()
 
-    if id_exists:
+    if user_exists:
         response, return_code = internal_server_error_response_template()
         response["reason"] = "id already exists"
     else:
@@ -101,16 +101,16 @@ def update_user(user_id):
         return jsonify(response), return_code
 
     with db_connection().cursor() as cursor:
-        id_exists, user_data = check_user_exists_by_id(user_id, cursor)
+        user_exists = check_user_exists_by_id(user_id, cursor)
 
-        if id_exists:
+        if user_exists:
             cursor.execute(f"UPDATE users "
                            f"SET user_name = '{user_name}' "
                            f"WHERE user_id = {user_id}")
             db_connection().commit()
 
         # In case the user does not exist
-        if id_exists:
+        if user_exists:
             response, return_code = ok_response_template()
             response["user_updated"] = user_name
         else:
@@ -130,8 +130,8 @@ def remove_user(user_id):
 
 
 # Runs a SELECT query on DB to check if the user_id exists
-# Returns tuple containing if the user_id exists and the user object in-case requested, empty object by default
-def check_user_exists_by_id(user_id, cursor, return_user_object=False) -> tuple[bool, dict]:
+# Returns tuple containing if the user_id exists and the user object in-case requested
+def check_user_exists_by_id(user_id, cursor, return_user_object=False) -> bool | tuple[bool, dict]:
     db_connection().commit()
     if return_user_object:
         cursor.execute(f"SELECT user_id, user_name, creation_date "
@@ -142,9 +142,9 @@ def check_user_exists_by_id(user_id, cursor, return_user_object=False) -> tuple[
                        f"FROM users "
                        f"WHERE user_id={user_id}")
     if cursor.rowcount:
-        return True, {} if not return_user_object else cursor.fetchone()
+        return True if not return_user_object else (True, cursor.fetchone())
 
-    return False, {}
+    return False
 
 
 def run_rest_app():
