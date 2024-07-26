@@ -27,8 +27,7 @@ def get_user(user_id):
         response["user_name"] = user_object[USER_NAME_INDEX_IN_DB - 1]
 
     else:
-        response, return_code = internal_server_error_response_template()
-        response["reason"] = "no such id"
+        response, return_code = no_such_id_response()
 
     return jsonify(response), return_code
 
@@ -36,24 +35,19 @@ def get_user(user_id):
 # Saves new user to DB for a given id and json payload containing key user_name
 @app.route(backend_route, methods=['POST'])
 def create_user(user_id):
-
-    # TODO: Extract duplicate code to method, use in POST, PUT
     is_right_format, request_payload = extract_json_from_request(request)
 
     # Returns error in-case request is not in json format
     if not is_right_format:
-        response, return_code = unsupported_media_type_response_template()
-        response["reason"] = "payload should be json"
+        response, return_code = payload_not_type_json_response()
 
         return jsonify(response), return_code
 
-    # TODO: Extract duplicate code to method, use in POST, PUT
     # Returns error is user_name key does not exist
     user_name = request_payload.get("user_name")
 
     if not user_name:
-        response, return_code = unprocessable_entity_response_template()
-        response["reason"] = "json does not contain user_name"
+        response, return_code = no_user_name_in_json_response()
 
         return jsonify(response), return_code
 
@@ -79,23 +73,18 @@ def create_user(user_id):
 
 @app.route(backend_route, methods=['PUT'])
 def update_user(user_id):
-
-    # TODO: Extract duplicate code to method, use in POST, PUT
     is_right_format, request_payload = extract_json_from_request(request)
 
     if not is_right_format:
-        response, return_code = unsupported_media_type_response_template()
-        response["reason"] = "payload should be json"
+        response, return_code = payload_not_type_json_response()
 
         return jsonify(response), return_code
 
-    # TODO: Extract duplicate code to method, use in POST, PUT
     # Returns error is user_name key does not exist
     user_name = request_payload.get("user_name")
 
     if not user_name:
-        response, return_code = unprocessable_entity_response_template()
-        response["reason"] = "json does not contain user_name"
+        response, return_code = no_user_name_in_json_response()
 
         return jsonify(response), return_code
 
@@ -113,8 +102,7 @@ def update_user(user_id):
 
         # In case the user does not exist
         else:
-            response, return_code = internal_server_error_response_template()
-            response["reason"] = "no such id"
+            response, return_code = no_such_id_response()
 
     return jsonify(response), return_code
 
@@ -132,8 +120,7 @@ def remove_user(user_id):
             response, return_code = ok_response_template()
             response["user_deleted"] = user_id
         else:
-            response, return_code = internal_server_error_response_template()
-            response["reason"] = "no such id"
+            response, return_code = no_such_id_response()
 
     return jsonify(response), return_code
 
@@ -154,6 +141,27 @@ def check_user_exists_by_id(user_id, cursor, return_user_object=False) -> bool |
         return True if not return_user_object else (True, cursor.fetchone())
 
     return False if not return_user_object else (False, {})
+
+
+def no_such_id_response():
+    response, return_code = internal_server_error_response_template()
+    response["reason"] = "no such id"
+
+    return response, return_code
+
+
+def no_user_name_in_json_response():
+    response, return_code = unprocessable_entity_response_template()
+    response["reason"] = "json does not contain user_name"
+
+    return response, return_code
+
+
+def payload_not_type_json_response():
+    response, return_code = unsupported_media_type_response_template()
+    response["reason"] = "payload should be json"
+
+    return response, return_code
 
 
 def run_rest_app():
