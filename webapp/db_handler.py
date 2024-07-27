@@ -1,10 +1,11 @@
 from configparser import ConfigParser
 import pymysql.cursors
+import os
 
 # This script reads connection details from config,
 # establishes a connection with the db and returns the connection object
 config = ConfigParser()
-config.read('config.ini')
+config.read(os.path.join(os.path.dirname(__file__), 'config.ini'))
 
 # Connecting to DB
 connection = pymysql.connect(host=config['DB']['host'],
@@ -30,6 +31,7 @@ def check_user_exists_by_id(user_id, cursor, return_user_object=False) -> bool |
         return True if not return_user_object else (True, cursor.fetchone())
 
     return False if not return_user_object else (False, {})
+
 
 # Returns the db connection instance
 def db_connection():

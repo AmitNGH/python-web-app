@@ -1,7 +1,7 @@
 from flask import Flask
-from Utils import USER_NAME_INDEX_IN_DB
-from db_handler import (db_connection,
-                        check_user_exists_by_id)
+from webapp.Utils import USER_NAME_INDEX_IN_DB
+from webapp.db_handler import (db_connection,
+                               check_user_exists_by_id)
 
 app = Flask(__name__)
 
@@ -17,9 +17,9 @@ def get_user_name(user_id):
         return "<H1 id='error'>\" no such user: + user_id + \"</H1>"
 
 
-def run_web_app():
-    app.run(host="0.0.0.0", port=5001, debug=True)
+def run_web_app(debug_mode=False):
+    app.run(host="0.0.0.0", port=5001, debug=debug_mode)
 
 
 if __name__ == "__main__":
-    run_web_app()
+    run_web_app(True)
