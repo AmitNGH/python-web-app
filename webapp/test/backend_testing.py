@@ -12,6 +12,7 @@ from webapp.Utils import (OK_RETURN_CODE,
 
 tests_user_id = -9999
 expected_user_name = "Amit"
+expected_new_user_name = "AmitUpdated"
 
 expected_ok_status = "ok"
 expected_ok_return_code = OK_RETURN_CODE
@@ -27,6 +28,8 @@ expected_unsupported_media_type_code = UNSUPPORTED_MEDIA_TYPE_CODE
 
 expected_invalid_json_reason = "json does not contain user_name"
 expected_unprocessable_entity_code = UNPROCESSABLE_ENTITY_CODE
+
+
 
 
 def before_test_get_user_found():
@@ -163,20 +166,121 @@ def test_create_user_invalid_json_format():
         format_error_assertion_message("reason", expected_invalid_json_reason, actual_reason))
 
 
+def before_test_update_user_success():
+    with db_connection().cursor() as cursor:
+        cursor.execute(f"INSERT IGNORE INTO users (user_id, user_name, creation_date) "
+                       f"VALUES ({tests_user_id}, '{expected_user_name}', NULL)")
+        db_connection().commit()
+
+
+def test_update_user_success():
+    json_response = request("PUT", f"http://localhost:5000/users/{tests_user_id}",
+                            json={"user_name": expected_new_user_name})
+
+    actual_return_code = json_response.status_code
+
+    json_response = json_response.json()
+    actual_status = json_response["status"]
+    actual_user_updated = json_response["user_updated"]
+
+    assert expected_ok_return_code == actual_return_code, (
+        format_error_assertion_message("return_code", expected_ok_return_code, actual_return_code))
+    assert expected_ok_status == actual_status, (
+        format_error_assertion_message("status", expected_ok_status, actual_status))
+    assert expected_new_user_name == actual_user_updated, (
+        format_error_assertion_message("user_updated", expected_new_user_name, actual_user_updated))
+
+
+def before_test_update_user_not_found():
+    with db_connection().cursor() as cursor:
+        cursor.execute(f"DELETE FROM users "
+                       f"WHERE user_id = {tests_user_id}")
+        db_connection().commit()
+
+
+def test_update_user_not_found():
+    json_response = request("PUT", f"http://localhost:5000/users/{tests_user_id}",
+                            json={"user_name": expected_new_user_name})
+
+    actual_return_code = json_response.status_code
+
+    json_response = json_response.json()
+    actual_status = json_response["status"]
+    actual_reason = json_response["reason"]
+
+    assert expected_internal_server_error_code == actual_return_code, (
+        format_error_assertion_message("return_code", expected_internal_server_error_code, actual_return_code))
+    assert expected_error_status == actual_status, (
+        format_error_assertion_message("status", expected_error_status, actual_status))
+    assert expected_no_id_error_reason == actual_reason, (
+        format_error_assertion_message("reason", expected_no_id_error_reason, actual_reason))
+
+
+def test_update_user_unsupported_format():
+    json_response = request("PUT", f"http://localhost:5000/users/{tests_user_id}",
+                            data={"user_name": expected_new_user_name})
+
+    actual_return_code = json_response.status_code
+
+    json_response = json_response.json()
+    actual_status = json_response["status"]
+    actual_reason = json_response["reason"]
+
+    assert expected_unsupported_media_type_code == actual_return_code, (
+        format_error_assertion_message("return_code", expected_unsupported_media_type_code, actual_return_code))
+    assert expected_error_status == actual_status, (
+        format_error_assertion_message("status", expected_error_status, actual_status))
+    assert expected_unsupported_format_reason == actual_reason, (
+        format_error_assertion_message("reason", expected_unsupported_format_reason, actual_reason))
+
+
+def test_update_user_invalid_json_format():
+    json_response = request("PUT", f"http://localhost:5000/users/{tests_user_id}",
+                            json={"testField": expected_new_user_name})
+
+    actual_return_code = json_response.status_code
+
+    json_response = json_response.json()
+    actual_status = json_response["status"]
+    actual_reason = json_response["reason"]
+
+    assert expected_unprocessable_entity_code == actual_return_code, (
+        format_error_assertion_message("return_code", expected_unprocessable_entity_code, actual_return_code))
+    assert expected_error_status == actual_status, (
+        format_error_assertion_message("status", expected_error_status, actual_status))
+    assert expected_invalid_json_reason == actual_reason, (
+        format_error_assertion_message("reason", expected_invalid_json_reason, actual_reason))
+
+
 def run_tests():
     # GET method tests
     before_test_get_user_found()
     test_get_user_found()
+
     before_test_get_user_not_found()
     test_get_user_not_found()
 
     # POST method tests
     before_test_create_user_success()
     test_create_user_success()
+
     before_test_create_user_already_exists()
     test_create_user_already_exists()
+
     test_create_user_unsupported_format()
+
     test_create_user_invalid_json_format()
+
+    # PUT method tests
+    before_test_update_user_success()
+    test_update_user_success()
+
+    before_test_update_user_not_found()
+    test_update_user_not_found()
+
+    test_update_user_unsupported_format()
+
+    test_update_user_invalid_json_format()
 
 
 if __name__ == '__main__':
