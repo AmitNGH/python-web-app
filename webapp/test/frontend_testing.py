@@ -4,8 +4,9 @@ from time import sleep
 
 from webapp.web_app import run_web_app
 from webapp.db_handler import db_connection
+from webapp.test.TestUtils import format_error_assertion_message
 
-tests_user_id = -1
+tests_user_id = -9999
 expected_user_name = "Amit"
 expected_error_message = f"no such user with id: {tests_user_id}"
 
@@ -25,9 +26,12 @@ def test_id_found():
     user_element = driver.find_element(by="id", value="user")
 
     is_user_name_displayed = user_element.is_displayed()
-    user_name_displayed = user_element.text
+    actual_user_name = user_element.text
 
-    assert is_user_name_displayed and expected_user_name == user_name_displayed
+    assert is_user_name_displayed, (
+        format_error_assertion_message("user_name visible", "True", is_user_name_displayed))
+    assert expected_user_name == actual_user_name, (
+        format_error_assertion_message("user_name", expected_user_name, actual_user_name))
 
 
 def before_test_id_not_found():
@@ -44,9 +48,12 @@ def test_id_not_found():
     error_element = driver.find_element(by="id", value="error")
 
     is_error_displayed = error_element.is_displayed()
-    displayed_error = error_element.text
+    actual_error_message = error_element.text
 
-    assert is_error_displayed and expected_error_message == displayed_error
+    assert is_error_displayed, (
+        format_error_assertion_message("error visible", "True", is_error_displayed))
+    assert expected_error_message == actual_error_message, (
+        format_error_assertion_message("error", expected_error_message, actual_error_message))
 
 
 def run_tests():
@@ -59,11 +66,11 @@ def run_tests():
 
 
 if __name__ == '__main__':
-    web_app_thread = Process(target=run_web_app)
-    web_app_thread.start()
+    web_app_process = Process(target=run_web_app)
+    web_app_process.start()
     sleep(5)
 
     run_tests()
 
-    web_app_thread.terminate()
-    web_app_thread.join()
+    web_app_process.terminate()
+    web_app_process.join()
