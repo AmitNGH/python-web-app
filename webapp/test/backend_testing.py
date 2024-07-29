@@ -30,8 +30,6 @@ expected_invalid_json_reason = "json does not contain user_name"
 expected_unprocessable_entity_code = UNPROCESSABLE_ENTITY_CODE
 
 
-
-
 def before_test_get_user_found():
     with db_connection().cursor() as cursor:
         cursor.execute(f"INSERT IGNORE INTO users (user_id, user_name, creation_date) "
@@ -77,7 +75,7 @@ def test_get_user_not_found():
     assert expected_error_status == actual_status, (
         format_error_assertion_message("status", expected_error_status, actual_status))
     assert expected_no_id_error_reason == actual_reason, (
-        format_error_assertion_message("user_name", expected_no_id_error_reason, actual_reason))
+        format_error_assertion_message("reason", expected_no_id_error_reason, actual_reason))
 
 
 def before_test_create_user_success():
@@ -252,6 +250,54 @@ def test_update_user_invalid_json_format():
         format_error_assertion_message("reason", expected_invalid_json_reason, actual_reason))
 
 
+def before_test_delete_user_found():
+    with db_connection().cursor() as cursor:
+        cursor.execute(f"INSERT IGNORE INTO users (user_id, user_name, creation_date) "
+                       f"VALUES ({tests_user_id}, '{expected_user_name}', NULL)")
+        db_connection().commit()
+
+
+def test_delete_user_found():
+    json_response = request("DELETE", f"http://localhost:5000/users/{tests_user_id}")
+
+    actual_return_code = json_response.status_code
+
+    json_response = json_response.json()
+    actual_status = json_response["status"]
+    actual_user_id = json_response["user_deleted"]
+
+    assert expected_ok_return_code == actual_return_code, (
+        format_error_assertion_message("return_code", expected_ok_return_code, actual_return_code))
+    assert expected_ok_status == actual_status, (
+        format_error_assertion_message("status", expected_ok_status, actual_status))
+    assert tests_user_id == actual_user_id, (
+        format_error_assertion_message("user_deleted", tests_user_id, actual_user_id))
+
+
+def before_test_delete_user_not_found():
+    with db_connection().cursor() as cursor:
+        cursor.execute(f"DELETE FROM users "
+                       f"WHERE user_id = {tests_user_id}")
+        db_connection().commit()
+
+
+def test_delete_user_not_found():
+    json_response = request("DELETE", f"http://localhost:5000/users/{tests_user_id}")
+
+    actual_return_code = json_response.status_code
+
+    json_response = json_response.json()
+    actual_status = json_response["status"]
+    actual_reason = json_response["reason"]
+
+    assert expected_internal_server_error_code == actual_return_code, (
+        format_error_assertion_message("return_code", expected_internal_server_error_code, actual_return_code))
+    assert expected_error_status == actual_status, (
+        format_error_assertion_message("status", expected_error_status, actual_status))
+    assert expected_no_id_error_reason == actual_reason, (
+        format_error_assertion_message("reason", expected_no_id_error_reason, actual_reason))
+
+
 def run_tests():
     # GET method tests
     before_test_get_user_found()
@@ -281,6 +327,13 @@ def run_tests():
     test_update_user_unsupported_format()
 
     test_update_user_invalid_json_format()
+
+    # DELETE method tests
+    before_test_delete_user_found()
+    test_delete_user_found()
+
+    before_test_delete_user_not_found()
+    test_delete_user_not_found()
 
 
 if __name__ == '__main__':
