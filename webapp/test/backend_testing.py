@@ -10,7 +10,6 @@ from webapp.Utils import (OK_RETURN_CODE,
                           UNPROCESSABLE_ENTITY_CODE,
                           INTERNAL_SERVER_ERROR_CODE)
 
-# TODO: Add DB Query to tests
 tests_user_id = -9999
 expected_user_name = "Amit"
 expected_new_user_name = "AmitUpdated"
@@ -47,12 +46,22 @@ def test_get_user_found():
     actual_status = json_response["status"]
     actual_user_name = json_response["user_name"]
 
+    with db_connection().cursor() as cursor:
+        db_connection().commit()
+        cursor.execute(f"SELECT user_name "
+                       f"FROM users "
+                       f"WHERE user_id={tests_user_id}")
+
+        actual_db_user_name = cursor.fetchone()[0]
+
     assert expected_ok_return_code == actual_return_code, (
         format_error_assertion_message("return_code", expected_ok_return_code, actual_return_code))
     assert expected_ok_status == actual_status, (
         format_error_assertion_message("status", expected_ok_status, actual_status))
     assert expected_user_name == actual_user_name, (
         format_error_assertion_message("user_name", expected_user_name, actual_user_name))
+    assert expected_user_name == actual_db_user_name, (
+        format_error_assertion_message("db user_name", expected_user_name, actual_db_user_name))
 
 
 def before_test_get_user_not_found():
@@ -96,12 +105,22 @@ def test_create_user_success():
     actual_status = json_response["status"]
     actual_user_added = json_response["user_added"]
 
+    with db_connection().cursor() as cursor:
+        db_connection().commit()
+        cursor.execute(f"SELECT user_name "
+                       f"FROM users "
+                       f"WHERE user_id={tests_user_id}")
+
+        actual_db_user_name = cursor.fetchone()[0]
+
     assert expected_ok_return_code == actual_return_code, (
         format_error_assertion_message("return_code", expected_ok_return_code, actual_return_code))
     assert expected_ok_status == actual_status, (
         format_error_assertion_message("status", expected_ok_status, actual_status))
     assert expected_user_name == actual_user_added, (
         format_error_assertion_message("user_added", expected_user_name, actual_user_added))
+    assert expected_user_name == actual_db_user_name, (
+        format_error_assertion_message("db user_name", expected_user_name, actual_db_user_name))
 
 
 def before_test_create_user_already_exists():
@@ -180,14 +199,24 @@ def test_update_user_success():
 
     json_response = json_response.json()
     actual_status = json_response["status"]
-    actual_user_updated = json_response["user_updated"]
+    actual_user_name_updated = json_response["user_updated"]
+
+    with db_connection().cursor() as cursor:
+        db_connection().commit()
+        cursor.execute(f"SELECT user_name "
+                       f"FROM users "
+                       f"WHERE user_id={tests_user_id}")
+
+        actual_db_user_name = cursor.fetchone()[0]
 
     assert expected_ok_return_code == actual_return_code, (
         format_error_assertion_message("return_code", expected_ok_return_code, actual_return_code))
     assert expected_ok_status == actual_status, (
         format_error_assertion_message("status", expected_ok_status, actual_status))
-    assert expected_new_user_name == actual_user_updated, (
-        format_error_assertion_message("user_updated", expected_new_user_name, actual_user_updated))
+    assert expected_new_user_name == actual_user_name_updated, (
+        format_error_assertion_message("user_updated", expected_new_user_name, actual_user_name_updated))
+    assert expected_new_user_name == actual_db_user_name, (
+        format_error_assertion_message("db user_name", expected_new_user_name, actual_db_user_name))
 
 
 def before_test_update_user_not_found():
@@ -267,12 +296,22 @@ def test_delete_user_found():
     actual_status = json_response["status"]
     actual_user_id = json_response["user_deleted"]
 
+    with db_connection().cursor() as cursor:
+        db_connection().commit()
+        cursor.execute(f"SELECT user_name "
+                       f"FROM users "
+                       f"WHERE user_id={tests_user_id}")
+
+        query_results = cursor.fetchall()
+
     assert expected_ok_return_code == actual_return_code, (
         format_error_assertion_message("return_code", expected_ok_return_code, actual_return_code))
     assert expected_ok_status == actual_status, (
         format_error_assertion_message("status", expected_ok_status, actual_status))
     assert tests_user_id == actual_user_id, (
         format_error_assertion_message("user_deleted", tests_user_id, actual_user_id))
+    assert len(query_results) == 0, (
+        format_error_assertion_message("number of query results", "0", len(query_results)))
 
 
 def before_test_delete_user_not_found():
