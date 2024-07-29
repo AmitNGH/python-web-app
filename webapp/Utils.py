@@ -1,8 +1,9 @@
 from werkzeug.exceptions import UnsupportedMediaType
+from werkzeug.routing import IntegerConverter
 
 OK_RETURN_CODE = 200
-UNPROCESSABLE_ENTITY_CODE = 422
 UNSUPPORTED_MEDIA_TYPE_CODE = 415
+UNPROCESSABLE_ENTITY_CODE = 422
 INTERNAL_SERVER_ERROR_CODE = 500
 
 USER_ID_INDEX_IN_DB = 1
@@ -35,3 +36,7 @@ def extract_json_from_request(json_request) -> tuple[bool, dict]:
         return False, {}
 
     return True, request_json
+
+
+class SignedIntConverter(IntegerConverter):
+    regex = r'-?\d+'

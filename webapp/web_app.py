@@ -1,12 +1,14 @@
 from flask import Flask
-from webapp.Utils import USER_NAME_INDEX_IN_DB
+from webapp.Utils import (SignedIntConverter,
+                          USER_NAME_INDEX_IN_DB)
 from webapp.db_handler import (db_connection,
                                check_user_exists_by_id)
 
 app = Flask(__name__)
+app.url_map.converters['sint'] = SignedIntConverter
 
 
-@app.route("/users/get_user_data/<user_id>")
+@app.route("/users/get_user_data/<sint:user_id>")
 def get_user_name(user_id):
     with db_connection().cursor() as cursor:
         user_exists, user_object = check_user_exists_by_id(user_id, cursor, return_user_object=True)

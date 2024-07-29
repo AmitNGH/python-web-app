@@ -1,18 +1,20 @@
 from flask import Flask, jsonify, request
 from datetime import datetime
 
-from db_handler import (db_connection,
-                        check_user_exists_by_id)
-from Utils import (extract_json_from_request,
-                   ok_response_template,
-                   unprocessable_entity_response_template,
-                   unsupported_media_type_response_template,
-                   internal_server_error_response_template,
-                   USER_NAME_INDEX_IN_DB)
+from webapp.db_handler import (db_connection,
+                               check_user_exists_by_id)
+from webapp.Utils import (SignedIntConverter,
+                          extract_json_from_request,
+                          ok_response_template,
+                          unprocessable_entity_response_template,
+                          unsupported_media_type_response_template,
+                          internal_server_error_response_template,
+                          USER_NAME_INDEX_IN_DB)
 
 app = Flask(__name__)
 
-backend_route = '/users/<int:user_id>'
+app.url_map.converters['sint'] = SignedIntConverter
+backend_route = '/users/<sint:user_id>'
 
 
 # Returns username stored in the DB for a given id
@@ -147,9 +149,9 @@ def payload_not_type_json_response():
     return response, return_code
 
 
-def run_rest_app():
-    app.run(host="0.0.0.0", port=5000, debug=True)
+def run_rest_app(debug_mode=False):
+    app.run(host="0.0.0.0", port=5000, debug=debug_mode)
 
 
 if __name__ == "__main__":
-    run_rest_app()
+    run_rest_app(True)
