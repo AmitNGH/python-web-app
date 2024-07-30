@@ -338,6 +338,13 @@ def test_delete_user_not_found():
         format_error_assertion_message("reason", expected_no_id_error_reason, actual_reason))
 
 
+def cleanup_tests():
+    with db_connection().cursor() as cursor:
+        cursor.execute(f"DELETE FROM users "
+                       f"WHERE user_id = {tests_user_id}")
+        db_connection().commit()
+
+
 def run_tests():
     # GET method tests
     before_test_get_user_found()
@@ -374,6 +381,8 @@ def run_tests():
 
     before_test_delete_user_not_found()
     test_delete_user_not_found()
+
+    cleanup_tests()
 
 
 if __name__ == '__main__':

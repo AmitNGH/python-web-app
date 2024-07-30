@@ -19,7 +19,6 @@ def before_test_id_found():
 
 
 def test_id_found():
-
     driver = webdriver.Chrome()
     driver.get(f"http://localhost:5001/users/get_user_data/{tests_user_id}")
 
@@ -56,13 +55,21 @@ def test_id_not_found():
         format_error_assertion_message("error", expected_error_message, actual_error_message))
 
 
-def run_tests():
+def cleanup_tests():
+    with db_connection().cursor() as cursor:
+        cursor.execute(f"DELETE FROM users "
+                       f"WHERE user_id = {tests_user_id}")
+        db_connection().commit()
 
+
+def run_tests():
     before_test_id_found()
     test_id_found()
 
     before_test_id_not_found()
     test_id_not_found()
+
+    cleanup_tests()
 
 
 if __name__ == '__main__':

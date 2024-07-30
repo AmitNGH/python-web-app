@@ -69,9 +69,18 @@ def test_full_request():
         format_error_assertion_message("frontend user_name", expected_user_name, actual_user_name))
 
 
+def cleanup_tests():
+    with db_connection().cursor() as cursor:
+        cursor.execute(f"DELETE FROM users "
+                       f"WHERE user_id = {tests_user_id}")
+        db_connection().commit()
+
+
 def run_tests():
     before_test_full_request()
     test_full_request()
+
+    cleanup_tests()
 
 
 if __name__ == '__main__':
