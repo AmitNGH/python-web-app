@@ -74,6 +74,7 @@ def create_user(user_id):
     return jsonify(response), return_code
 
 
+# Updates an existing user for a given id and json payload containing key user_name
 @app.route(backend_route, methods=['PUT'])
 def update_user(user_id):
     is_right_format, request_payload = extract_json_from_request(request)
@@ -110,11 +111,13 @@ def update_user(user_id):
     return jsonify(response), return_code
 
 
+# Deletes existing user with the id provided
 @app.route(backend_route, methods=['DELETE'])
 def remove_user(user_id):
     with db_connection().cursor() as cursor:
         user_exists = check_user_exists_by_id(user_id, cursor)
 
+        # if the user exists, deletes it from DB
         if user_exists:
             cursor.execute(f"DELETE FROM users "
                            f"WHERE user_id = {user_id}")

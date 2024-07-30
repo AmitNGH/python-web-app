@@ -8,6 +8,7 @@ app = Flask(__name__)
 app.url_map.converters['sint'] = SignedIntConverter
 
 
+# Gets user data by given id as HTML format
 @app.route("/users/get_user_data/<sint:user_id>")
 def get_user_name(user_id):
     with db_connection().cursor() as cursor:

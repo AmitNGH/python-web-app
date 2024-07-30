@@ -3,7 +3,7 @@ import pymysql.cursors
 import os
 
 # This script reads connection details from config,
-# establishes a connection with the db and returns the connection object
+# establishes a connection with the db and returns a connection object
 config = ConfigParser()
 config.read(os.path.join(os.path.dirname(__file__), 'config.ini'))
 
