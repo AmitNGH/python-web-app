@@ -17,8 +17,8 @@ expected_ok_return_code = OK_RETURN_CODE
 
 def before_test_full_request():
     with db_connection().cursor() as cursor:
-        cursor.execute(f"DELETE FROM users "
-                       f"WHERE user_id = {tests_user_id}")
+        cursor.execute("DELETE FROM users "
+                       "WHERE user_id = %s", tests_user_id)
         db_connection().commit()
 
 
@@ -46,9 +46,9 @@ def test_full_request():
     # Check user was created in DB
     with db_connection().cursor() as cursor:
         db_connection().commit()
-        cursor.execute(f"SELECT user_name "
-                       f"FROM users "
-                       f"WHERE user_id={tests_user_id}")
+        cursor.execute("SELECT user_name "
+                       "FROM users "
+                       "WHERE user_id=%s", tests_user_id)
 
         actual_db_user_name = cursor.fetchone()[0]
 
@@ -71,8 +71,8 @@ def test_full_request():
 
 def cleanup_tests():
     with db_connection().cursor() as cursor:
-        cursor.execute(f"DELETE FROM users "
-                       f"WHERE user_id = {tests_user_id}")
+        cursor.execute("DELETE FROM users "
+                       "WHERE user_id = %s", tests_user_id)
         db_connection().commit()
 
 

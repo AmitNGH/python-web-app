@@ -32,8 +32,8 @@ expected_unprocessable_entity_code = UNPROCESSABLE_ENTITY_CODE
 
 def before_test_get_user_found():
     with db_connection().cursor() as cursor:
-        cursor.execute(f"INSERT IGNORE INTO users (user_id, user_name, creation_date) "
-                       f"VALUES ({tests_user_id}, '{expected_user_name}', NULL)")
+        cursor.execute("INSERT IGNORE INTO users (user_id, user_name, creation_date) "
+                       "VALUES (%s, %s, NULL)", (tests_user_id, expected_user_name))
         db_connection().commit()
 
 
@@ -48,9 +48,9 @@ def test_get_user_found():
 
     with db_connection().cursor() as cursor:
         db_connection().commit()
-        cursor.execute(f"SELECT user_name "
-                       f"FROM users "
-                       f"WHERE user_id={tests_user_id}")
+        cursor.execute("SELECT user_name "
+                       "FROM users "
+                       "WHERE user_id=%s", tests_user_id)
 
         actual_db_user_name = cursor.fetchone()[0]
 
@@ -66,8 +66,8 @@ def test_get_user_found():
 
 def before_test_get_user_not_found():
     with db_connection().cursor() as cursor:
-        cursor.execute(f"DELETE FROM users "
-                       f"WHERE user_id = {tests_user_id}")
+        cursor.execute("DELETE FROM users "
+                       "WHERE user_id = %s", tests_user_id)
         db_connection().commit()
 
 
@@ -90,8 +90,8 @@ def test_get_user_not_found():
 
 def before_test_create_user_success():
     with db_connection().cursor() as cursor:
-        cursor.execute(f"DELETE FROM users "
-                       f"WHERE user_id = {tests_user_id}")
+        cursor.execute("DELETE FROM users "
+                       "WHERE user_id = %s", tests_user_id)
         db_connection().commit()
 
 
@@ -107,9 +107,9 @@ def test_create_user_success():
 
     with db_connection().cursor() as cursor:
         db_connection().commit()
-        cursor.execute(f"SELECT user_name "
-                       f"FROM users "
-                       f"WHERE user_id={tests_user_id}")
+        cursor.execute("SELECT user_name "
+                       "FROM users "
+                       "WHERE user_id=%s", tests_user_id)
 
         actual_db_user_name = cursor.fetchone()[0]
 
@@ -125,8 +125,8 @@ def test_create_user_success():
 
 def before_test_create_user_already_exists():
     with db_connection().cursor() as cursor:
-        cursor.execute(f"INSERT IGNORE INTO users (user_id, user_name, creation_date) "
-                       f"VALUES ({tests_user_id}, '{expected_user_name}', NULL)")
+        cursor.execute("INSERT IGNORE INTO users (user_id, user_name, creation_date) "
+                       "VALUES (%s, %s, NULL)", (tests_user_id, expected_user_name))
         db_connection().commit()
 
 
@@ -186,8 +186,8 @@ def test_create_user_invalid_json_format():
 
 def before_test_update_user_success():
     with db_connection().cursor() as cursor:
-        cursor.execute(f"INSERT IGNORE INTO users (user_id, user_name, creation_date) "
-                       f"VALUES ({tests_user_id}, '{expected_user_name}', NULL)")
+        cursor.execute("INSERT IGNORE INTO users (user_id, user_name, creation_date) "
+                       "VALUES (%s, %s, NULL)", (tests_user_id, expected_user_name))
         db_connection().commit()
 
 
@@ -203,9 +203,9 @@ def test_update_user_success():
 
     with db_connection().cursor() as cursor:
         db_connection().commit()
-        cursor.execute(f"SELECT user_name "
-                       f"FROM users "
-                       f"WHERE user_id={tests_user_id}")
+        cursor.execute("SELECT user_name "
+                       "FROM users "
+                       "WHERE user_id=%s", tests_user_id)
 
         actual_db_user_name = cursor.fetchone()[0]
 
@@ -221,8 +221,8 @@ def test_update_user_success():
 
 def before_test_update_user_not_found():
     with db_connection().cursor() as cursor:
-        cursor.execute(f"DELETE FROM users "
-                       f"WHERE user_id = {tests_user_id}")
+        cursor.execute("DELETE FROM users "
+                       "WHERE user_id = %s", tests_user_id)
         db_connection().commit()
 
 
@@ -282,8 +282,8 @@ def test_update_user_invalid_json_format():
 
 def before_test_delete_user_found():
     with db_connection().cursor() as cursor:
-        cursor.execute(f"INSERT IGNORE INTO users (user_id, user_name, creation_date) "
-                       f"VALUES ({tests_user_id}, '{expected_user_name}', NULL)")
+        cursor.execute("INSERT IGNORE INTO users (user_id, user_name, creation_date) "
+                       "VALUES (%s, %s, NULL)", (tests_user_id, expected_user_name))
         db_connection().commit()
 
 
@@ -298,9 +298,9 @@ def test_delete_user_found():
 
     with db_connection().cursor() as cursor:
         db_connection().commit()
-        cursor.execute(f"SELECT user_name "
-                       f"FROM users "
-                       f"WHERE user_id={tests_user_id}")
+        cursor.execute("SELECT user_name "
+                       "FROM users "
+                       "WHERE user_id=%s", tests_user_id)
 
         query_results = cursor.fetchall()
 
@@ -316,8 +316,8 @@ def test_delete_user_found():
 
 def before_test_delete_user_not_found():
     with db_connection().cursor() as cursor:
-        cursor.execute(f"DELETE FROM users "
-                       f"WHERE user_id = {tests_user_id}")
+        cursor.execute("DELETE FROM users "
+                       "WHERE user_id = %s", tests_user_id)
         db_connection().commit()
 
 
@@ -340,8 +340,8 @@ def test_delete_user_not_found():
 
 def cleanup_tests():
     with db_connection().cursor() as cursor:
-        cursor.execute(f"DELETE FROM users "
-                       f"WHERE user_id = {tests_user_id}")
+        cursor.execute("DELETE FROM users "
+                       "WHERE user_id = %s", tests_user_id)
         db_connection().commit()
 
 

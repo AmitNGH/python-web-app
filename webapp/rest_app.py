@@ -60,8 +60,8 @@ def create_user(user_id):
 
         if not user_exists:
             now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            cursor.execute(f"INSERT INTO users (user_id, user_name, creation_date) "
-                           f"VALUES ({user_id}, '{user_name}', '{now}')")
+            cursor.execute("INSERT INTO users (user_id, user_name, creation_date) "
+                           "VALUES (%s, %s, %s)", (user_id, user_name, now))
             db_connection().commit()
 
             response, return_code = ok_response_template()
@@ -96,9 +96,9 @@ def update_user(user_id):
         user_exists = check_user_exists_by_id(user_id, cursor)
 
         if user_exists:
-            cursor.execute(f"UPDATE users "
-                           f"SET user_name = '{user_name}' "
-                           f"WHERE user_id = {user_id}")
+            cursor.execute("UPDATE users "
+                           "SET user_name = %s "
+                           "WHERE user_id = %s", (user_name, user_id))
             db_connection().commit()
 
             response, return_code = ok_response_template()
@@ -119,8 +119,8 @@ def remove_user(user_id):
 
         # if the user exists, deletes it from DB
         if user_exists:
-            cursor.execute(f"DELETE FROM users "
-                           f"WHERE user_id = {user_id}")
+            cursor.execute("DELETE FROM users "
+                           "WHERE user_id = %s", user_id)
             db_connection().commit()
 
             response, return_code = ok_response_template()
