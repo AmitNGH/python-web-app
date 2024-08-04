@@ -4,7 +4,10 @@ from time import sleep
 
 from webapp.web_app import run_web_app
 from webapp.db_handler import db_connection
-from webapp.test.TestUtils import format_error_assertion_message
+from webapp.test.TestUtils import (InvalidDriverName,
+                                   get_driver_by_name,
+                                   get_testing_endpoint_details,
+                                   format_error_assertion_message)
 
 tests_user_id = -9999
 expected_user_name = "Amit"
@@ -19,7 +22,9 @@ def before_test_id_found():
 
 
 def test_id_found():
-    driver = webdriver.Chrome()
+
+    driver = get_driver_by_name("Chrome")
+
     driver.get(f"http://localhost:5001/users/get_user_data/{tests_user_id}")
 
     user_element = driver.find_element(by="id", value="user")
@@ -73,7 +78,8 @@ def run_tests():
 
 
 if __name__ == '__main__':
-    web_app_process = Process(target=run_web_app)
+    db_results = get_testing_endpoint_details("frontend")
+    web_app_process = Process(target=run_web_app(debug_mode=True))
     web_app_process.start()
     sleep(5)
 
