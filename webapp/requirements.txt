@@ -1,4 +1,4 @@
-pymysql
+PyMySQL[rsa]
 requests
 flask
 selenium
