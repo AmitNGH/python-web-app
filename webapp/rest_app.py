@@ -57,19 +57,20 @@ def create_user(user_id):
     # Check id does not exist and execute insert to db
     with db_connection().cursor() as cursor:
         user_exists = check_user_exists_by_id(user_id, cursor)
+        user_db_id = user_id
 
-        if not user_exists:
-            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            cursor.execute("INSERT INTO users (user_id, user_name, creation_date) "
-                           "VALUES (%s, %s, %s)", (user_id, user_name, now))
-            db_connection().commit()
+        while user_exists:
+            user_db_id += 1
+            user_exists = check_user_exists_by_id(user_db_id, cursor)
 
-            response, return_code = ok_response_template()
-            response["user_added"] = user_name
+        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        cursor.execute("INSERT INTO users (user_id, user_name, creation_date) "
+                       "VALUES (%s, %s, %s)", (user_db_id, user_name, now))
+        db_connection().commit()
 
-        else:
-            response, return_code = internal_server_error_response_template()
-            response["reason"] = "id already exists"
+    response, return_code = ok_response_template()
+    response["user_added"] = user_name
+    response["user_id"] = user_db_id
 
     return jsonify(response), return_code
 
@@ -157,4 +158,4 @@ def run_rest_app(debug_mode=False):
 
 
 if __name__ == "__main__":
-    run_rest_app(True)
+    run_rest_app(False)

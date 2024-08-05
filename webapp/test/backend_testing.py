@@ -25,7 +25,7 @@ expected_error_status = "error"
 expected_no_id_error_reason = "no such id"
 expected_internal_server_error_code = INTERNAL_SERVER_ERROR_CODE
 
-expected_id_exists_reason = "id already exists"
+expected_id_exists_new_id = tests_user_id + 1
 
 expected_unsupported_format_reason = "payload should be json"
 expected_unsupported_media_type_code = UNSUPPORTED_MEDIA_TYPE_CODE
@@ -108,6 +108,7 @@ def test_create_user_success():
     json_response = json_response.json()
     actual_status = json_response["status"]
     actual_user_added = json_response["user_added"]
+    actual_user_id = json_response["user_id"]
 
     with db_connection().cursor() as cursor:
         db_connection().commit()
@@ -123,6 +124,8 @@ def test_create_user_success():
         format_error_assertion_message("status", expected_ok_status, actual_status))
     assert expected_user_name == actual_user_added, (
         format_error_assertion_message("user_added", expected_user_name, actual_user_added))
+    assert tests_user_id == actual_user_id, (
+        format_error_assertion_message("user_id", expected_id_exists_new_id, actual_user_id))
     assert expected_user_name == actual_db_user_name, (
         format_error_assertion_message("db user_name", expected_user_name, actual_db_user_name))
 
@@ -131,10 +134,13 @@ def before_test_create_user_already_exists():
     with db_connection().cursor() as cursor:
         cursor.execute("INSERT IGNORE INTO users (user_id, user_name, creation_date) "
                        "VALUES (%s, %s, NULL)", (tests_user_id, expected_user_name))
+        cursor.execute("DELETE FROM users "
+                       "WHERE user_id = %s", expected_id_exists_new_id)
         db_connection().commit()
 
 
 def test_create_user_already_exists():
+
     json_response = request("POST", f"{endpoint_url}/{tests_user_id}",
                             json={"user_name": expected_user_name})
 
@@ -142,14 +148,17 @@ def test_create_user_already_exists():
 
     json_response = json_response.json()
     actual_status = json_response["status"]
-    actual_reason = json_response["reason"]
+    actual_user_added = json_response["user_added"]
+    actual_user_id = json_response["user_id"]
 
-    assert expected_internal_server_error_code == actual_return_code, (
-        format_error_assertion_message("return_code", expected_internal_server_error_code, actual_return_code))
-    assert expected_error_status == actual_status, (
-        format_error_assertion_message("status", expected_error_status, actual_status))
-    assert expected_id_exists_reason == actual_reason, (
-        format_error_assertion_message("reason", expected_id_exists_reason, actual_reason))
+    assert expected_ok_return_code == actual_return_code, (
+        format_error_assertion_message("return_code", expected_ok_return_code, actual_return_code))
+    assert expected_ok_status == actual_status, (
+        format_error_assertion_message("status", expected_ok_status, actual_status))
+    assert expected_user_name == actual_user_added, (
+        format_error_assertion_message("user_added", expected_user_name, actual_user_added))
+    assert expected_id_exists_new_id == actual_user_id, (
+        format_error_assertion_message("user_id", expected_id_exists_new_id, actual_user_id))
 
 
 def test_create_user_unsupported_format():
