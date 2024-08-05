@@ -4,14 +4,18 @@ from time import sleep
 
 from webapp.rest_app import run_rest_app
 from webapp.db_handler import db_connection
-from webapp.test.TestUtils import format_error_assertion_message
+from webapp.test.TestUtils import (format_error_assertion_message,
+                                   get_testing_endpoint_details)
 from webapp.Utils import (OK_RETURN_CODE,
                           UNSUPPORTED_MEDIA_TYPE_CODE,
                           UNPROCESSABLE_ENTITY_CODE,
                           INTERNAL_SERVER_ERROR_CODE)
 
+global endpoint_details
+global endpoint_url
+global expected_user_name
+
 tests_user_id = -9999
-expected_user_name = "Amit"
 expected_new_user_name = "AmitUpdated"
 
 expected_ok_status = "ok"
@@ -38,7 +42,7 @@ def before_test_get_user_found():
 
 
 def test_get_user_found():
-    json_response = request("GET", f"http://localhost:5000/users/{tests_user_id}")
+    json_response = request("GET", f"{endpoint_url}/{tests_user_id}")
 
     actual_return_code = json_response.status_code
 
@@ -72,7 +76,7 @@ def before_test_get_user_not_found():
 
 
 def test_get_user_not_found():
-    json_response = request("GET", f"http://localhost:5000/users/{tests_user_id}")
+    json_response = request("GET", f"{endpoint_url}/{tests_user_id}")
 
     actual_return_code = json_response.status_code
 
@@ -96,7 +100,7 @@ def before_test_create_user_success():
 
 
 def test_create_user_success():
-    json_response = request("POST", f"http://localhost:5000/users/{tests_user_id}",
+    json_response = request("POST", f"{endpoint_url}/{tests_user_id}",
                             json={"user_name": expected_user_name})
 
     actual_return_code = json_response.status_code
@@ -131,7 +135,7 @@ def before_test_create_user_already_exists():
 
 
 def test_create_user_already_exists():
-    json_response = request("POST", f"http://localhost:5000/users/{tests_user_id}",
+    json_response = request("POST", f"{endpoint_url}/{tests_user_id}",
                             json={"user_name": expected_user_name})
 
     actual_return_code = json_response.status_code
@@ -149,7 +153,7 @@ def test_create_user_already_exists():
 
 
 def test_create_user_unsupported_format():
-    json_response = request("POST", f"http://localhost:5000/users/{tests_user_id}",
+    json_response = request("POST", f"{endpoint_url}/{tests_user_id}",
                             data={"user_name": expected_user_name})
 
     actual_return_code = json_response.status_code
@@ -167,7 +171,7 @@ def test_create_user_unsupported_format():
 
 
 def test_create_user_invalid_json_format():
-    json_response = request("POST", f"http://localhost:5000/users/{tests_user_id}",
+    json_response = request("POST", f"{endpoint_url}/{tests_user_id}",
                             json={"testField": expected_user_name})
 
     actual_return_code = json_response.status_code
@@ -192,7 +196,7 @@ def before_test_update_user_success():
 
 
 def test_update_user_success():
-    json_response = request("PUT", f"http://localhost:5000/users/{tests_user_id}",
+    json_response = request("PUT", f"{endpoint_url}/{tests_user_id}",
                             json={"user_name": expected_new_user_name})
 
     actual_return_code = json_response.status_code
@@ -227,7 +231,7 @@ def before_test_update_user_not_found():
 
 
 def test_update_user_not_found():
-    json_response = request("PUT", f"http://localhost:5000/users/{tests_user_id}",
+    json_response = request("PUT", f"{endpoint_url}/{tests_user_id}",
                             json={"user_name": expected_new_user_name})
 
     actual_return_code = json_response.status_code
@@ -245,7 +249,7 @@ def test_update_user_not_found():
 
 
 def test_update_user_unsupported_format():
-    json_response = request("PUT", f"http://localhost:5000/users/{tests_user_id}",
+    json_response = request("PUT", f"{endpoint_url}/{tests_user_id}",
                             data={"user_name": expected_new_user_name})
 
     actual_return_code = json_response.status_code
@@ -263,7 +267,7 @@ def test_update_user_unsupported_format():
 
 
 def test_update_user_invalid_json_format():
-    json_response = request("PUT", f"http://localhost:5000/users/{tests_user_id}",
+    json_response = request("PUT", f"{endpoint_url}/{tests_user_id}",
                             json={"testField": expected_new_user_name})
 
     actual_return_code = json_response.status_code
@@ -288,7 +292,7 @@ def before_test_delete_user_found():
 
 
 def test_delete_user_found():
-    json_response = request("DELETE", f"http://localhost:5000/users/{tests_user_id}")
+    json_response = request("DELETE", f"{endpoint_url}/{tests_user_id}")
 
     actual_return_code = json_response.status_code
 
@@ -322,7 +326,7 @@ def before_test_delete_user_not_found():
 
 
 def test_delete_user_not_found():
-    json_response = request("DELETE", f"http://localhost:5000/users/{tests_user_id}")
+    json_response = request("DELETE", f"{endpoint_url}/{tests_user_id}")
 
     actual_return_code = json_response.status_code
 
@@ -386,6 +390,12 @@ def run_tests():
 
 
 if __name__ == '__main__':
+    endpoint_details = get_testing_endpoint_details("backend")
+    endpoint_url = (f"http://{endpoint_details["endpoint_url"]}:"
+                    f"{endpoint_details["endpoint_port"]}"
+                    f"{endpoint_details["endpoint_api"]}")
+    expected_user_name = endpoint_details["user_name"]
+
     rest_app_process = Process(target=run_rest_app)
     rest_app_process.start()
     sleep(5)

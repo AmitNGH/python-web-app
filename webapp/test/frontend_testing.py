@@ -4,13 +4,15 @@ from time import sleep
 
 from webapp.web_app import run_web_app
 from webapp.db_handler import db_connection
-from webapp.test.TestUtils import (InvalidDriverName,
-                                   get_driver_by_name,
+from webapp.test.TestUtils import (get_driver_by_name,
                                    get_testing_endpoint_details,
                                    format_error_assertion_message)
 
+global endpoint_details
+global endpoint_url
+global expected_user_name
+
 tests_user_id = -9999
-expected_user_name = "Amit"
 expected_error_message = f"no such user with id: {tests_user_id}"
 
 
@@ -23,9 +25,9 @@ def before_test_id_found():
 
 def test_id_found():
 
-    driver = get_driver_by_name("Chrome")
+    driver = get_driver_by_name(endpoint_details["browser"], webdriver)
 
-    driver.get(f"http://localhost:5001/users/get_user_data/{tests_user_id}")
+    driver.get(f"{endpoint_url}/{tests_user_id}")
 
     user_element = driver.find_element(by="id", value="user")
 
@@ -47,7 +49,7 @@ def before_test_id_not_found():
 
 def test_id_not_found():
     driver = webdriver.Chrome()
-    driver.get(f"http://localhost:5001/users/get_user_data/{tests_user_id}")
+    driver.get(f"{endpoint_url}/{tests_user_id}")
 
     error_element = driver.find_element(by="id", value="error")
 
@@ -78,8 +80,13 @@ def run_tests():
 
 
 if __name__ == '__main__':
-    db_results = get_testing_endpoint_details("frontend")
-    web_app_process = Process(target=run_web_app(debug_mode=True))
+    endpoint_details = get_testing_endpoint_details("frontend")
+    endpoint_url = (f"http://{endpoint_details["endpoint_url"]}:"
+                    f"{endpoint_details["endpoint_port"]}"
+                    f"{endpoint_details["endpoint_api"]}")
+    expected_user_name = endpoint_details["user_name"]
+
+    web_app_process = Process(target=run_web_app)
     web_app_process.start()
     sleep(5)
 

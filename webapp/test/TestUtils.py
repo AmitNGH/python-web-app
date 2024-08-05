@@ -9,25 +9,31 @@ def format_error_assertion_message(variable_name, expected, actual):
 def get_driver_by_name(driver_name, webdriver):
     match driver_name:
         case "Chrome":
-            return webdriver.Chrome
+            return webdriver.Chrome()
         case "Firefox":
-            return webdriver.Firefox
+            return webdriver.Firefox()
         case "Ie":
-            return webdriver.Ie
+            return webdriver.Ie()
         case "Edge":
-            return webdriver.Edge
+            return webdriver.Edge()
         case _:
             raise InvalidDriverName
 
 
-def get_testing_endpoint_details(endpoint_name):
-    # TODO: Finish query and change tests to use the new config table
+def get_testing_endpoint_details(endpoint_name) -> dict:
     with db_connection().cursor() as cursor:
         cursor.execute("SELECT endpoint_name, endpoint_url, endpoint_port, endpoint_api, browser, user_name "
                        "FROM config "
                        "WHERE endpoint_name=%s", endpoint_name)
+        endpoint_details = cursor.fetchone()
+
+    return {"endpoint_name": endpoint_details[0],
+            "endpoint_url": endpoint_details[1],
+            "endpoint_port": endpoint_details[2],
+            "endpoint_api": endpoint_details[3],
+            "browser": endpoint_details[4],
+            "user_name": endpoint_details[5]}
 
 
 class InvalidDriverName:
     pass
-

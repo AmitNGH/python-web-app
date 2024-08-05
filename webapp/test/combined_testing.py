@@ -7,10 +7,18 @@ from webapp.db_handler import db_connection
 from webapp.web_app import run_web_app
 from webapp.rest_app import run_rest_app
 from webapp.Utils import OK_RETURN_CODE
-from webapp.test.TestUtils import format_error_assertion_message
+from webapp.test.TestUtils import (format_error_assertion_message,
+                                   get_testing_endpoint_details,
+                                   get_driver_by_name)
+
+global frontend_endpoint_details
+global frontend_endpoint_url
+global frontend_expected_user_name
+global backend_endpoint_details
+global backend_endpoint_url
+global backend_expected_user_name
 
 tests_user_id = -9999
-expected_user_name = "Amit"
 expected_ok_status = "ok"
 expected_ok_return_code = OK_RETURN_CODE
 
@@ -24,11 +32,11 @@ def before_test_full_request():
 
 def test_full_request():
     # Create user with backend request
-    json_response = request("POST", f"http://localhost:5000/users/{tests_user_id}",
-                            json={"user_name": expected_user_name})
+    json_response = request("POST", f"{backend_endpoint_url}/{tests_user_id}",
+                            json={"user_name": backend_expected_user_name})
 
     # Get user with backend request
-    json_response = request("GET", f"http://localhost:5000/users/{tests_user_id}")
+    json_response = request("GET", f"{backend_endpoint_url}/{tests_user_id}")
 
     actual_return_code = json_response.status_code
 
@@ -40,8 +48,8 @@ def test_full_request():
         format_error_assertion_message("return_code", expected_ok_return_code, actual_return_code))
     assert expected_ok_status == get_request_actual_status, (
         format_error_assertion_message("status", expected_ok_status, get_request_actual_status))
-    assert expected_user_name == get_request_actual_user_name, (
-        format_error_assertion_message("user_name", expected_user_name, get_request_actual_user_name))
+    assert backend_expected_user_name == get_request_actual_user_name, (
+        format_error_assertion_message("user_name", backend_expected_user_name, get_request_actual_user_name))
 
     # Check user was created in DB
     with db_connection().cursor() as cursor:
@@ -52,11 +60,11 @@ def test_full_request():
 
         actual_db_user_name = cursor.fetchone()[0]
 
-    assert expected_user_name == actual_db_user_name, (
-        format_error_assertion_message("db user_name", expected_user_name, actual_db_user_name))
+    assert backend_expected_user_name == actual_db_user_name, (
+        format_error_assertion_message("db user_name", backend_expected_user_name, actual_db_user_name))
 
-    driver = webdriver.Chrome()
-    driver.get(f"http://localhost:5001/users/get_user_data/{tests_user_id}")
+    driver = get_driver_by_name(frontend_endpoint_details["browser"], webdriver)
+    driver.get(f"{frontend_endpoint_url}/{tests_user_id}")
 
     user_element = driver.find_element(by="id", value="user")
 
@@ -65,8 +73,8 @@ def test_full_request():
 
     assert is_user_name_displayed, (
         format_error_assertion_message("user_name visible", "True", is_user_name_displayed))
-    assert expected_user_name == actual_user_name, (
-        format_error_assertion_message("frontend user_name", expected_user_name, actual_user_name))
+    assert frontend_expected_user_name == actual_user_name, (
+        format_error_assertion_message("frontend user_name", frontend_expected_user_name, actual_user_name))
 
 
 def cleanup_tests():
@@ -84,6 +92,18 @@ def run_tests():
 
 
 if __name__ == '__main__':
+    frontend_endpoint_details = get_testing_endpoint_details("frontend")
+    frontend_endpoint_url = (f"http://{frontend_endpoint_details["endpoint_url"]}:"
+                             f"{frontend_endpoint_details["endpoint_port"]}"
+                             f"{frontend_endpoint_details["endpoint_api"]}")
+    frontend_expected_user_name = frontend_endpoint_details["user_name"]
+
+    backend_endpoint_details = get_testing_endpoint_details("backend")
+    backend_endpoint_url = (f"http://{backend_endpoint_details["endpoint_url"]}:"
+                            f"{backend_endpoint_details["endpoint_port"]}"
+                            f"{backend_endpoint_details["endpoint_api"]}")
+    backend_expected_user_name = backend_endpoint_details["user_name"]
+
     web_app_process = Process(target=run_web_app)
     web_app_process.start()
     rest_app_process = Process(target=run_rest_app)
