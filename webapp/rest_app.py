@@ -1,3 +1,5 @@
+from signal import CTRL_C_EVENT
+from os import kill, getpid
 from flask import Flask, jsonify, request
 from datetime import datetime
 
@@ -151,6 +153,13 @@ def payload_not_type_json_response():
     response["reason"] = "payload should be json"
 
     return response, return_code
+
+
+# Sends Ctrl C event to shutdown server
+@app.route('/stop_server')
+def stop_server():
+    kill(getpid(), CTRL_C_EVENT)
+    return 'Server stopped'
 
 
 def run_rest_app(debug_mode=False):
