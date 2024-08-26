@@ -6,7 +6,7 @@ on:
     branches: [ "master", "second-part" ]
 
 jobs:
-  build:
+  build-and-test:
   
     runs-on: ubuntu-latest
 
@@ -22,11 +22,11 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r webapp\\requirements.txt
         
     - name: Run Backend Tests
       run: |
-        python test\\backend_testing.py
+        python webapp\\test\\backend_testing.py
 
     # - name: Take env down
     #   run: |
