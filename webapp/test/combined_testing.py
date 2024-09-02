@@ -93,15 +93,15 @@ def run_tests():
 
 if __name__ == '__main__':
     frontend_endpoint_details = get_testing_endpoint_details("frontend")
-    frontend_endpoint_url = (f"http://{frontend_endpoint_details["endpoint_url"]}:"
-                             f"{frontend_endpoint_details["endpoint_port"]}"
-                             f"{frontend_endpoint_details["endpoint_api"]}")
+    frontend_endpoint_url = (f"http://{frontend_endpoint_details['endpoint_url']}:"
+                             f"{frontend_endpoint_details['endpoint_port']}"
+                             f"{frontend_endpoint_details['endpoint_api']}")
     frontend_expected_user_name = frontend_endpoint_details["user_name"]
 
     backend_endpoint_details = get_testing_endpoint_details("backend")
-    backend_endpoint_url = (f"http://{backend_endpoint_details["endpoint_url"]}:"
-                            f"{backend_endpoint_details["endpoint_port"]}"
-                            f"{backend_endpoint_details["endpoint_api"]}")
+    backend_endpoint_url = (f"http://{backend_endpoint_details['endpoint_url']}:"
+                            f"{backend_endpoint_details['endpoint_port']}"
+                            f"{backend_endpoint_details['endpoint_api']}")
     backend_expected_user_name = backend_endpoint_details["user_name"]
 
     web_app_process = Process(target=run_web_app)
