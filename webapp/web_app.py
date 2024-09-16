@@ -1,5 +1,5 @@
-from signal import CTRL_C_EVENT
-from os import kill, getpid
+import signal
+import os
 from flask import Flask
 from Utils import (SignedIntConverter,
                    USER_NAME_INDEX_IN_DB)
@@ -25,8 +25,8 @@ def get_user_name(user_id):
 # Sends Ctrl C event to shutdown server
 @app.route('/stop_server')
 def stop_server():
-    kill(getpid(), CTRL_C_EVENT)
-    return 'Server stopped'
+    os.kill(os.getpid(), signal.SIGTERM)
+    return "Server shutting down..."
 
 
 def run_web_app(debug_mode=False):
