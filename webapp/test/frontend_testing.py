@@ -31,7 +31,6 @@ def test_id_found():
     options.add_argument("--disable-gpu")
 
     driver = get_driver_by_name(endpoint_details["browser"], webdriver, options=options)
-    driver.options = options
 
     driver.get(f"{endpoint_url}/{tests_user_id}")
 

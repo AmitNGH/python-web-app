@@ -7,15 +7,21 @@ def format_error_assertion_message(variable_name, expected, actual):
 
 
 def get_driver_by_name(driver_name, webdriver, options=None):
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+
     match driver_name:
         case "Chrome":
             return webdriver.Chrome(options=options)
         case "Firefox":
-            return webdriver.Firefox(options=options)
+            return webdriver.Firefox()
         case "Ie":
-            return webdriver.Ie(options=options)
+            return webdriver.Ie()
         case "Edge":
-            return webdriver.Edge(options=options)
+            return webdriver.Edge()
         case _:
             raise InvalidDriverName
 

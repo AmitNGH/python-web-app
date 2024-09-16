@@ -24,7 +24,7 @@ pipeline {
                 script {
                     sh 'docker compose down -v'
                     sh 'docker compose up --build -d'
-                    sh 'sleep 5'
+                    sh 'sleep 10'
                 }
             }
         }
@@ -46,15 +46,13 @@ pipeline {
             steps {
                 script {
                     sh 'docker network connect jenkins ${DB_CONTAINER}'
-
                     ip = sh(script: 'docker inspect -f "{{.NetworkSettings.Networks.jenkins.IPAddress}}" ${DB_CONTAINER}', returnStdout: true).trim()
                     sh "sed -i 's/^host=.*/host=${ip}/' ${WEBAPP_DIR}/config.ini"
-                    sh "cat ${WEBAPP_DIR}/config.ini"
 
 
                     withCredentials([usernamePassword(credentialsId: 'db-credentials', usernameVariable: 'DB_USER', passwordVariable: 'DB_PASS')]) {
-                        def frontend_query = "UPDATE config SET endpoint_url = \\\"${ip}\\\" WHERE endpoint_name = 'frontend';"
-                        def backend_query = "UPDATE config SET endpoint_url = \\\"${ip}\\\" WHERE endpoint_name = 'backend';"
+                        def frontend_query = "UPDATE config SET endpoint_url = \\\"127.0.0.1\\\" WHERE endpoint_name = 'frontend';"
+                        def backend_query = "UPDATE config SET endpoint_url = \\\"127.0.0.1\\\" WHERE endpoint_name = 'backend';"
 
                         // Run the query using mysql command
                         sh """
@@ -67,11 +65,6 @@ pipeline {
                         //     sql("UPDATE config SET endpoint_url = ${ip} WHERE endpoint_name = 'backend';")
                         // }
                     }
-
-                    sh """
-                        . ./${VENV_DIR}/bin/activate
-                        ./${VENV_DIR}/bin/python ./WorldOfGames/e2e.py "${ip}" "${DB_PORT}"
-                    """
                 }
             }
         }
@@ -82,49 +75,33 @@ pipeline {
                     . ./${VENV_DIR}/bin/activate
                     ./${VENV_DIR}/bin/python ${WEBAPP_DIR}/test/backend_testing.py
                 """
-//                 sh 'ls -l ${WEBAPP_DIR}'
-//                 sh '. ${WEBAPP_DIR}/${VENV_DIR}/bin/activate'
-//                 sh 'python3 ${WEBAPP_DIR}/test/backend_testing.py'
             }
         }
 
-//         stage("Run Frontend Tests") {
-//             steps {
-//
-//             }
-//         }
-//
-//         stage("Run Combined Tests") {
-//             steps {
-//
-//             }
-//         }
-//
-//         stage("Clean Environment") {
-//             steps {
-//
-//             }
-//         }
+        stage("Run Frontend Tests") {
+            steps {
+                sh """
+                    . ./${VENV_DIR}/bin/activate
+                    ./${VENV_DIR}/bin/python ${WEBAPP_DIR}/test/frontend_testing.py
+                """
+            }
+        }
+
+        stage("Run Combined Tests") {
+            steps {
+                sh """
+                    . ./${VENV_DIR}/bin/activate
+                    ./${VENV_DIR}/bin/python ${WEBAPP_DIR}/test/combined_testing.py.py
+                """
+            }
+        }
     }
 
     post {
         always {
             script {
-                // sh """
-                //     . ./${VENV_DIR}/bin/activate
-                //     ./${VENV_DIR}/bin/python ${WEBAPP_DIR}/clean_environment.py
-                // """
-                sh 'docker logs ${DB_CONTAINER}'
                 sh 'docker compose down'
             }
-        }
-        success {
-            // Actions to take on success
-            echo 'Pipeline succeeded'
-        }
-        failure {
-            // Actions to take on failure
-            echo 'Pipeline failed'
         }
     }
 }
