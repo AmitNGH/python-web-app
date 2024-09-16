@@ -59,11 +59,6 @@ pipeline {
                             mysql -h ${ip} -u ${DB_USER} --password=${DB_PASS} ${DB_NAME} -e "${frontend_query}"
                             mysql -h ${ip} -u ${DB_USER} --password=${DB_PASS} ${DB_NAME} -e "${backend_query}"
                         """
-
-                        // jdbc('db') {
-                        //     sql("UPDATE config SET endpoint_url = ${ip} WHERE endpoint_name = 'frontend';")
-                        //     sql("UPDATE config SET endpoint_url = ${ip} WHERE endpoint_name = 'backend';")
-                        // }
                     }
                 }
             }
@@ -91,7 +86,7 @@ pipeline {
             steps {
                 sh """
                     . ./${VENV_DIR}/bin/activate
-                    ./${VENV_DIR}/bin/python ${WEBAPP_DIR}/test/combined_testing.py.py
+                    ./${VENV_DIR}/bin/python ${WEBAPP_DIR}/test/combined_testing.py
                 """
             }
         }
