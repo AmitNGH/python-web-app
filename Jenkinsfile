@@ -6,7 +6,9 @@ pipeline {
         WEBAPP_DIR= 'webapp'
         VENV_DIR = 'venv'
         DB_CONTAINER = "python-web-app-mysql-1"
-
+        PYTHONPATH = './webapp'
+        DB_PORT = 3306
+        DB_NAME = 'db'
     }
 
     stages {
@@ -20,10 +22,13 @@ pipeline {
         stage('Start DB') {
             steps {
                 script {
+                    docker volume rm db
                     sh 'docker compose up -d'
+                    sh 'sleep 30'
                 }
             }
         }
+
 
         stage('Setup Python Environment') {
             steps {
@@ -36,21 +41,40 @@ pipeline {
                 """
             }
         }
-//
-//         stage('Test') {
-//             steps {
-//                 script {
-// //                     sh 'docker network connect jenkins ${DB_CONTAINER}'
-// //                     ip = sh(script: 'docker inspect -f "{{.NetworkSettings.Networks.jenkins.IPAddress}}" ${CONTAINER_NAME}', returnStdout: true).trim()
-// //                     echo "IP Address: ${ip}"
-//
-//                     sh """
-//                         . ./${VENV_DIR}/bin/activate
-//                         ./${VENV_DIR}/bin/python ./WorldOfGames/e2e.py "${ip}" "${PORT}"
-//                     """
-//                 }
-//             }
-//         }
+
+        stage('Setup Tests') {
+            steps {
+                script {
+                    sh 'docker network connect jenkins ${DB_CONTAINER}'
+
+                    ip = sh(script: 'docker inspect -f "{{.NetworkSettings.Networks.jenkins.IPAddress}}" ${DB_CONTAINER}', returnStdout: true).trim()
+                    sh "sed -i 's/^host=.*/host=${ip}/' ${WEBAPP_DIR}/config.ini"
+                    sh "cat ${WEBAPP_DIR}/config.ini"
+
+
+                    withCredentials([usernamePassword(credentialsId: 'db-credentials', usernameVariable: 'DB_USER', passwordVariable: 'DB_PASS')]) {
+                        def frontend_query = "UPDATE config SET endpoint_url = \\\"${ip}\\\" WHERE endpoint_name = 'frontend';"
+                        def backend_query = "UPDATE config SET endpoint_url = \\\"${ip}\\\" WHERE endpoint_name = 'backend';"
+
+                        // Run the query using mysql command
+                        sh """
+                            mysql -h ${ip} -u ${DB_USER} --password=${DB_PASS} ${DB_NAME} -e "${frontend_query}"
+                            mysql -h ${ip} -u ${DB_USER} --password=${DB_PASS} ${DB_NAME} -e "${backend_query}"
+                        """
+
+                        // jdbc('db') {
+                        //     sql("UPDATE config SET endpoint_url = ${ip} WHERE endpoint_name = 'frontend';")
+                        //     sql("UPDATE config SET endpoint_url = ${ip} WHERE endpoint_name = 'backend';")
+                        // }
+                    }
+
+                    sh """
+                        . ./${VENV_DIR}/bin/activate
+                        ./${VENV_DIR}/bin/python ./WorldOfGames/e2e.py "${ip}" "${DB_PORT}"
+                    """
+                }
+            }
+        }
 
         stage("Run Backend Tests") {
             steps {
@@ -85,14 +109,13 @@ pipeline {
 
     post {
         always {
-            // Clean up the workspace
             script {
-                sh """
-                    . ./${VENV_DIR}/bin/activate
-                    ./${VENV_DIR}/bin/python ${WEBAPP_DIR}/clean_environment.py
-                """
-                sh 'docker compose down -d'
-                sh 'rm -r db'
+                // sh """
+                //     . ./${VENV_DIR}/bin/activate
+                //     ./${VENV_DIR}/bin/python ${WEBAPP_DIR}/clean_environment.py
+                // """
+                sh 'docker logs ${DB_CONTAINER}'
+                // sh 'docker compose down'
             }
         }
         success {
