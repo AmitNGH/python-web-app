@@ -62,8 +62,13 @@ def test_full_request():
 
     assert backend_expected_user_name == actual_db_user_name, (
         format_error_assertion_message("db user_name", backend_expected_user_name, actual_db_user_name))
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
 
-    driver = get_driver_by_name(frontend_endpoint_details["browser"], webdriver)
+    driver = get_driver_by_name(frontend_endpoint_details["browser"], webdriver, options=options)
     driver.get(f"{frontend_endpoint_url}/{tests_user_id}")
 
     user_element = driver.find_element(by="id", value="user")

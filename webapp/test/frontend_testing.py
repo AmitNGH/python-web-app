@@ -11,6 +11,7 @@ from test.TestUtils import (get_driver_by_name,
 global endpoint_details
 global endpoint_url
 global expected_user_name
+global driver
 
 tests_user_id = -9999
 expected_error_message = f"no such user with id: {tests_user_id}"
@@ -24,14 +25,6 @@ def before_test_id_found():
 
 
 def test_id_found():
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-
-    driver = get_driver_by_name(endpoint_details["browser"], webdriver, options=options)
-
     driver.get(f"{endpoint_url}/{tests_user_id}")
 
     user_element = driver.find_element(by="id", value="user")
@@ -53,7 +46,6 @@ def before_test_id_not_found():
 
 
 def test_id_not_found():
-    driver = webdriver.Chrome()
     driver.get(f"{endpoint_url}/{tests_user_id}")
 
     error_element = driver.find_element(by="id", value="error")
@@ -94,6 +86,14 @@ if __name__ == '__main__':
     web_app_process = Process(target=run_web_app)
     web_app_process.start()
     sleep(5)
+
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+
+    driver = get_driver_by_name(endpoint_details["browser"], webdriver, options=options)
 
     run_tests()
 
