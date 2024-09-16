@@ -1,7 +1,9 @@
 # Creates SQL container
 services:
   mysql:
-    image: mysql:latest
+    build:
+      dockerfile: ./sqlDockerfile
+    image: webapp-sql
     environment:
       MYSQL_DATABASE: 'db'
       MYSQL_USER: 'user'
@@ -9,5 +11,3 @@ services:
       MYSQL_ROOT_PASSWORD: 'root'
     ports:
       - '3306:3306'
-    volumes:
-      - ./sql/:/docker-entrypoint-initdb.d
