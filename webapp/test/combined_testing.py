@@ -3,11 +3,11 @@ from selenium import webdriver
 from time import sleep
 from requests import request
 
-from webapp.db_handler import db_connection
-from webapp.web_app import run_web_app
-from webapp.rest_app import run_rest_app
-from webapp.Utils import OK_RETURN_CODE
-from webapp.test.TestUtils import (format_error_assertion_message,
+from db_handler import db_connection
+from web_app import run_web_app
+from rest_app import run_rest_app
+from Utils import OK_RETURN_CODE
+from test.TestUtils import (format_error_assertion_message,
                                    get_testing_endpoint_details,
                                    get_driver_by_name)
 

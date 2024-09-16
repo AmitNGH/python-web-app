@@ -2,9 +2,9 @@ from multiprocessing import Process
 from selenium import webdriver
 from time import sleep
 
-from webapp.web_app import run_web_app
-from webapp.db_handler import db_connection
-from webapp.test.TestUtils import (get_driver_by_name,
+from web_app import run_web_app
+from db_handler import db_connection
+from test.TestUtils import (get_driver_by_name,
                                    get_testing_endpoint_details,
                                    format_error_assertion_message)
 

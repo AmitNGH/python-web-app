@@ -2,11 +2,11 @@ from multiprocessing import Process
 from requests import request
 from time import sleep
 
-from webapp.rest_app import run_rest_app
-from webapp.db_handler import db_connection
-from webapp.test.TestUtils import (format_error_assertion_message,
+from rest_app import run_rest_app
+from db_handler import db_connection
+from test.TestUtils import (format_error_assertion_message,
                                    get_testing_endpoint_details)
-from webapp.Utils import (OK_RETURN_CODE,
+from Utils import (OK_RETURN_CODE,
                           UNSUPPORTED_MEDIA_TYPE_CODE,
                           UNPROCESSABLE_ENTITY_CODE,
                           INTERNAL_SERVER_ERROR_CODE)

@@ -1,4 +1,4 @@
-from webapp.db_handler import db_connection
+from db_handler import db_connection
 
 
 # Generates proper asserting error message with given variable
