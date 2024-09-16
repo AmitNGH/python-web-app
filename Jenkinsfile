@@ -22,9 +22,9 @@ pipeline {
         stage('Start DB') {
             steps {
                 script {
-                    docker volume rm db
-                    sh 'docker compose up -d'
-                    sh 'sleep 30'
+                    sh 'docker compose down -v'
+                    sh 'docker compose up --build -d'
+                    sh 'sleep 5'
                 }
             }
         }
@@ -115,7 +115,7 @@ pipeline {
                 //     ./${VENV_DIR}/bin/python ${WEBAPP_DIR}/clean_environment.py
                 // """
                 sh 'docker logs ${DB_CONTAINER}'
-                // sh 'docker compose down'
+                sh 'docker compose down'
             }
         }
         success {
