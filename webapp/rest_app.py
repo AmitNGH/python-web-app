@@ -1,19 +1,15 @@
+import os
+import signal
 from flask import Flask, jsonify, request
 from datetime import datetime
 
-from webapp.db_handler import (db_connection,
-                               check_user_exists_by_id)
-from webapp.Utils import (SignedIntConverter,
-                          extract_json_from_request,
-                          ok_response_template,
-                          unprocessable_entity_response_template,
-                          unsupported_media_type_response_template,
-                          internal_server_error_response_template,
-                          USER_NAME_INDEX_IN_DB)
+from db_handler import (db_connection,
+                        check_user_exists_by_id)
+import Utils
 
 app = Flask(__name__)
 
-app.url_map.converters['sint'] = SignedIntConverter
+app.url_map.converters['sint'] = Utils.SignedIntConverter
 backend_route = '/users/<sint:user_id>'
 
 
@@ -26,8 +22,8 @@ def get_user(user_id):
 
     # Checks if the user exists, building the response object accordingly
     if user_exists:
-        response, return_code = ok_response_template()
-        response["user_name"] = user_object[USER_NAME_INDEX_IN_DB - 1]
+        response, return_code = Utils.ok_response_template()
+        response["user_name"] = user_object[Utils.USER_NAME_INDEX_IN_DB - 1]
 
     else:
         response, return_code = no_such_id_response()
@@ -38,7 +34,7 @@ def get_user(user_id):
 # Saves new user to DB for a given id and json payload containing key user_name
 @app.route(backend_route, methods=['POST'])
 def create_user(user_id):
-    is_right_format, request_payload = extract_json_from_request(request)
+    is_right_format, request_payload = Utils.extract_json_from_request(request)
 
     # Returns error in-case request is not in json format
     if not is_right_format:
@@ -68,7 +64,7 @@ def create_user(user_id):
                        "VALUES (%s, %s, %s)", (user_db_id, user_name, now))
         db_connection().commit()
 
-    response, return_code = ok_response_template()
+    response, return_code = Utils.ok_response_template()
     response["user_added"] = user_name
     response["user_id"] = user_db_id
 
@@ -78,7 +74,7 @@ def create_user(user_id):
 # Updates an existing user for a given id and json payload containing key user_name
 @app.route(backend_route, methods=['PUT'])
 def update_user(user_id):
-    is_right_format, request_payload = extract_json_from_request(request)
+    is_right_format, request_payload = Utils.extract_json_from_request(request)
 
     if not is_right_format:
         response, return_code = payload_not_type_json_response()
@@ -102,7 +98,7 @@ def update_user(user_id):
                            "WHERE user_id = %s", (user_name, user_id))
             db_connection().commit()
 
-            response, return_code = ok_response_template()
+            response, return_code = Utils.ok_response_template()
             response["user_updated"] = user_name
 
         # In case the user does not exist
@@ -124,7 +120,7 @@ def remove_user(user_id):
                            "WHERE user_id = %s", user_id)
             db_connection().commit()
 
-            response, return_code = ok_response_template()
+            response, return_code = Utils.ok_response_template()
             response["user_deleted"] = user_id
         else:
             response, return_code = no_such_id_response()
@@ -133,24 +129,30 @@ def remove_user(user_id):
 
 
 def no_such_id_response():
-    response, return_code = internal_server_error_response_template()
+    response, return_code = Utils.internal_server_error_response_template()
     response["reason"] = "no such id"
 
     return response, return_code
 
 
 def no_user_name_in_json_response():
-    response, return_code = unprocessable_entity_response_template()
+    response, return_code = Utils.unprocessable_entity_response_template()
     response["reason"] = "json does not contain user_name"
 
     return response, return_code
 
 
 def payload_not_type_json_response():
-    response, return_code = unsupported_media_type_response_template()
+    response, return_code = Utils.unsupported_media_type_response_template()
     response["reason"] = "payload should be json"
 
     return response, return_code
+
+
+@app.route('/stop_server')
+def stop_server():
+    os.kill(os.getpid(), signal.SIGTERM)
+    return "Server shutting down..."
 
 
 def run_rest_app(debug_mode=False):

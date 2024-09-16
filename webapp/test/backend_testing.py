@@ -2,11 +2,11 @@ from multiprocessing import Process
 from requests import request
 from time import sleep
 
-from webapp.rest_app import run_rest_app
-from webapp.db_handler import db_connection
-from webapp.test.TestUtils import (format_error_assertion_message,
+from rest_app import run_rest_app
+from db_handler import db_connection
+from test.TestUtils import (format_error_assertion_message,
                                    get_testing_endpoint_details)
-from webapp.Utils import (OK_RETURN_CODE,
+from Utils import (OK_RETURN_CODE,
                           UNSUPPORTED_MEDIA_TYPE_CODE,
                           UNPROCESSABLE_ENTITY_CODE,
                           INTERNAL_SERVER_ERROR_CODE)
@@ -400,10 +400,10 @@ def run_tests():
 
 if __name__ == '__main__':
     endpoint_details = get_testing_endpoint_details("backend")
-    endpoint_url = (f"http://{endpoint_details["endpoint_url"]}:"
-                    f"{endpoint_details["endpoint_port"]}"
-                    f"{endpoint_details["endpoint_api"]}")
-    expected_user_name = endpoint_details["user_name"]
+    endpoint_url = (f"http://{endpoint_details['endpoint_url']}:"
+                    f"{endpoint_details['endpoint_port']}"
+                    f"{endpoint_details['endpoint_api']}")
+    expected_user_name = endpoint_details['user_name']
 
     rest_app_process = Process(target=run_rest_app)
     rest_app_process.start()

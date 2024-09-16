@@ -2,15 +2,16 @@ from multiprocessing import Process
 from selenium import webdriver
 from time import sleep
 
-from webapp.web_app import run_web_app
-from webapp.db_handler import db_connection
-from webapp.test.TestUtils import (get_driver_by_name,
+from web_app import run_web_app
+from db_handler import db_connection
+from test.TestUtils import (get_driver_by_name,
                                    get_testing_endpoint_details,
                                    format_error_assertion_message)
 
 global endpoint_details
 global endpoint_url
 global expected_user_name
+global driver
 
 tests_user_id = -9999
 expected_error_message = f"no such user with id: {tests_user_id}"
@@ -24,9 +25,6 @@ def before_test_id_found():
 
 
 def test_id_found():
-
-    driver = get_driver_by_name(endpoint_details["browser"], webdriver)
-
     driver.get(f"{endpoint_url}/{tests_user_id}")
 
     user_element = driver.find_element(by="id", value="user")
@@ -48,7 +46,6 @@ def before_test_id_not_found():
 
 
 def test_id_not_found():
-    driver = webdriver.Chrome()
     driver.get(f"{endpoint_url}/{tests_user_id}")
 
     error_element = driver.find_element(by="id", value="error")
@@ -81,14 +78,22 @@ def run_tests():
 
 if __name__ == '__main__':
     endpoint_details = get_testing_endpoint_details("frontend")
-    endpoint_url = (f"http://{endpoint_details["endpoint_url"]}:"
-                    f"{endpoint_details["endpoint_port"]}"
-                    f"{endpoint_details["endpoint_api"]}")
+    endpoint_url = (f"http://{endpoint_details['endpoint_url']}:"
+                    f"{endpoint_details['endpoint_port']}"
+                    f"{endpoint_details['endpoint_api']}")
     expected_user_name = endpoint_details["user_name"]
 
     web_app_process = Process(target=run_web_app)
     web_app_process.start()
     sleep(5)
+
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+
+    driver = get_driver_by_name(endpoint_details["browser"], webdriver, options=options)
 
     run_tests()
 

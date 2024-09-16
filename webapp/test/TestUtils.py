@@ -1,4 +1,4 @@
-from webapp.db_handler import db_connection
+from db_handler import db_connection
 
 
 # Generates proper asserting error message with given variable
@@ -6,10 +6,16 @@ def format_error_assertion_message(variable_name, expected, actual):
     return f"Error asserting {variable_name} - expected value: {expected}, actual: {actual}"
 
 
-def get_driver_by_name(driver_name, webdriver):
+def get_driver_by_name(driver_name, webdriver, options=None):
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+
     match driver_name:
         case "Chrome":
-            return webdriver.Chrome()
+            return webdriver.Chrome(options=options)
         case "Firefox":
             return webdriver.Firefox()
         case "Ie":
