@@ -3,8 +3,9 @@ pipeline {
 
     environment {
         // Set up environment variables if needed
-        VENV_DIR = 'venv'
         WEBAPP_DIR= 'webapp'
+        VENV_DIR = 'venv'
+
     }
 
     stages {
@@ -18,11 +19,12 @@ pipeline {
         stage('Setup Python Environment') {
             steps {
                 // // Set up a virtual environment
-                sh 'python3 -m venv ${VENV_DIR}'
-                sh '. ${VENV_DIR}/bin/activate'
+                sh 'python3 -m venv ${WEBAPP_DIR}/${VENV_DIR}'
+                sh '. ${WEBAPP_DIR}/${VENV_DIR}/bin/activate'
+
                 // Upgrade pip and install dependencies
-                sh '${VENV_DIR}/bin/pip install --upgrade pip'
-                sh '${VENV_DIR}/bin/pip install -r ${WEBAPP_DIR}/requirements.txt'
+                sh '${WEBAPP_DIR}/${VENV_DIR}/bin/pip install --upgrade pip'
+                sh '${WEBAPP_DIR}/${VENV_DIR}/bin/pip install -r ${WEBAPP_DIR}/requirements.txt'
 
                 // sh 'pip install --upgrade pip'
                 // sh 'pip install -r requirements.txt'
@@ -31,7 +33,8 @@ pipeline {
 
         stage("Run Backend Tests") {
             steps {
-
+                sh 'ls -l ${WEBAPP_DIR}'
+                sh '. ${WEBAPP_DIR}/${VENV_DIR}/bin/activate'
                 sh 'python3 ${WEBAPP_DIR}/test/backend_testing.py'
             }
         }
