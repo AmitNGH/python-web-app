@@ -1,10 +1,10 @@
 from signal import CTRL_C_EVENT
 from os import kill, getpid
 from flask import Flask
-from webapp.Utils import (SignedIntConverter,
-                          USER_NAME_INDEX_IN_DB)
-from webapp.db_handler import (db_connection,
-                               check_user_exists_by_id)
+from Utils import (SignedIntConverter,
+                   USER_NAME_INDEX_IN_DB)
+from db_handler import (db_connection,
+                        check_user_exists_by_id)
 
 app = Flask(__name__)
 app.url_map.converters['sint'] = SignedIntConverter

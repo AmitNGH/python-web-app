@@ -6,16 +6,16 @@ def format_error_assertion_message(variable_name, expected, actual):
     return f"Error asserting {variable_name} - expected value: {expected}, actual: {actual}"
 
 
-def get_driver_by_name(driver_name, webdriver):
+def get_driver_by_name(driver_name, webdriver, options=None):
     match driver_name:
         case "Chrome":
-            return webdriver.Chrome()
+            return webdriver.Chrome(options=options)
         case "Firefox":
-            return webdriver.Firefox()
+            return webdriver.Firefox(options=options)
         case "Ie":
-            return webdriver.Ie()
+            return webdriver.Ie(options=options)
         case "Edge":
-            return webdriver.Edge()
+            return webdriver.Edge(options=options)
         case _:
             raise InvalidDriverName
 

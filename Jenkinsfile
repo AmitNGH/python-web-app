@@ -5,6 +5,7 @@ pipeline {
         // Set up environment variables if needed
         WEBAPP_DIR= 'webapp'
         VENV_DIR = 'venv'
+        DB_CONTAINER = "python-web-app-mysql-1"
 
     }
 
@@ -16,26 +17,50 @@ pipeline {
             }
         }
 
-        stage('Setup Python Environment') {
+        stage('Start DB') {
             steps {
-                // // Set up a virtual environment
-                sh 'python3 -m venv ${WEBAPP_DIR}/${VENV_DIR}'
-                sh '. ${WEBAPP_DIR}/${VENV_DIR}/bin/activate'
-
-                // Upgrade pip and install dependencies
-                sh '${WEBAPP_DIR}/${VENV_DIR}/bin/pip install --upgrade pip'
-                sh '${WEBAPP_DIR}/${VENV_DIR}/bin/pip install -r ${WEBAPP_DIR}/requirements.txt'
-
-                // sh 'pip install --upgrade pip'
-                // sh 'pip install -r requirements.txt'
+                script {
+                    sh 'docker compose up -d'
+                }
             }
         }
 
+        stage('Setup Python Environment') {
+            steps {
+                // // Set up a virtual environment
+                sh """
+                    python3 -m venv ./${VENV_DIR}
+                    . ./${VENV_DIR}/bin/activate
+                    ./${VENV_DIR}/bin/pip install -r ./${WEBAPP_DIR}/requirements.txt
+                    ./${VENV_DIR}/bin/pip install requests
+                """
+            }
+        }
+//
+//         stage('Test') {
+//             steps {
+//                 script {
+// //                     sh 'docker network connect jenkins ${DB_CONTAINER}'
+// //                     ip = sh(script: 'docker inspect -f "{{.NetworkSettings.Networks.jenkins.IPAddress}}" ${CONTAINER_NAME}', returnStdout: true).trim()
+// //                     echo "IP Address: ${ip}"
+//
+//                     sh """
+//                         . ./${VENV_DIR}/bin/activate
+//                         ./${VENV_DIR}/bin/python ./WorldOfGames/e2e.py "${ip}" "${PORT}"
+//                     """
+//                 }
+//             }
+//         }
+
         stage("Run Backend Tests") {
             steps {
-                sh 'ls -l ${WEBAPP_DIR}'
-                sh '. ${WEBAPP_DIR}/${VENV_DIR}/bin/activate'
-                sh 'python3 ${WEBAPP_DIR}/test/backend_testing.py'
+                sh """
+                    . ./${VENV_DIR}/bin/activate
+                    ./${VENV_DIR}/bin/python ${WEBAPP_DIR}/test/backend_testing.py
+                """
+//                 sh 'ls -l ${WEBAPP_DIR}'
+//                 sh '. ${WEBAPP_DIR}/${VENV_DIR}/bin/activate'
+//                 sh 'python3 ${WEBAPP_DIR}/test/backend_testing.py'
             }
         }
 
@@ -61,7 +86,14 @@ pipeline {
     post {
         always {
             // Clean up the workspace
-            sh 'python3 ${WEBAPP_DIR}/clean_environment.py'
+            script {
+                sh """
+                    . ./${VENV_DIR}/bin/activate
+                    ./${VENV_DIR}/bin/python ${WEBAPP_DIR}/clean_environment.py
+                """
+                sh 'docker compose down -d'
+                sh 'rm -r db'
+            }
         }
         success {
             // Actions to take on success

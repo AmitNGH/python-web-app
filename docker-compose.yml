@@ -1,5 +1,4 @@
 # Creates SQL container
-version: '3'
 services:
   mysql:
     image: mysql:latest

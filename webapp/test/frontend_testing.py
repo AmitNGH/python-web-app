@@ -24,8 +24,14 @@ def before_test_id_found():
 
 
 def test_id_found():
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
 
-    driver = get_driver_by_name(endpoint_details["browser"], webdriver)
+    driver = get_driver_by_name(endpoint_details["browser"], webdriver, options=options)
+    driver.options = options
 
     driver.get(f"{endpoint_url}/{tests_user_id}")
 

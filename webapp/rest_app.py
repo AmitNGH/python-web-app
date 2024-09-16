@@ -3,15 +3,15 @@ from os import kill, getpid
 from flask import Flask, jsonify, request
 from datetime import datetime
 
-from webapp.db_handler import (db_connection,
-                               check_user_exists_by_id)
-from webapp.Utils import (SignedIntConverter,
-                          extract_json_from_request,
-                          ok_response_template,
-                          unprocessable_entity_response_template,
-                          unsupported_media_type_response_template,
-                          internal_server_error_response_template,
-                          USER_NAME_INDEX_IN_DB)
+from db_handler import (db_connection,
+                        check_user_exists_by_id)
+from Utils import (SignedIntConverter,
+                   extract_json_from_request,
+                   ok_response_template,
+                   unprocessable_entity_response_template,
+                   unsupported_media_type_response_template,
+                   internal_server_error_response_template,
+                   USER_NAME_INDEX_IN_DB)
 
 app = Flask(__name__)
 
